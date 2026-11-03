@@ -9,7 +9,7 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
-  timeout: 8000, // 8 detik timeout
+  timeout: 8000,
 });
 
 /**
@@ -20,7 +20,6 @@ const apiClient = axios.create({
 export const getTodos = async () => {
   try {
     const response = await apiClient.get('/todos');
-    // Backend mengembalikan { "data": [...] }
     return response.data?.data || [];
   } catch (error) {
     throw handleApiError(error);
@@ -30,13 +29,14 @@ export const getTodos = async () => {
 /**
  * Membuat to-do baru
  * POST http://localhost:8080/api/todos
- * Payload: { "title": string, "priority": "low" | "medium" | "high" }
+ * Payload: { "title": string, "priority": string, "due_date": string }
  */
-export const createTodo = async (title, priority = 'medium') => {
+export const createTodo = async (title, priority = 'medium', dueDate = '') => {
   try {
     const response = await apiClient.post('/todos', {
       title: title.trim(),
       priority,
+      due_date: dueDate || '',
     });
     return response.data?.data;
   } catch (error) {
@@ -45,9 +45,9 @@ export const createTodo = async (title, priority = 'medium') => {
 };
 
 /**
- * Mengupdate status to-do (toggle is_completed atau update title/priority)
+ * Mengupdate status to-do atau data tugas (title, priority, due_date, is_completed)
  * PUT http://localhost:8080/api/todos/:id
- * Payload: { is_completed?: boolean, title?: string, priority?: string }
+ * Payload: { is_completed?: boolean, title?: string, priority?: string, due_date?: string }
  */
 export const updateTodo = async (id, payload) => {
   try {
@@ -77,15 +77,14 @@ export const deleteTodo = async (id) => {
 function handleApiError(error) {
   if (error.code === 'ERR_NETWORK' || !error.response) {
     return new Error(
-      'Tidak dapat terhubung ke server backend Golang (http://localhost:8080). Pastikan backend sudah dijalankan.'
+      'Tidak dapat terhubung ke server backend Golang (http://localhost:8080). Pastikan server Go dan MySQL sudah berjalan.'
     );
   }
   const backendMsg = error.response?.data?.error || error.response?.data?.message;
   if (backendMsg) {
     return new Error(backendMsg);
   }
-  return new Error(error.message || 'Terjadi kesalahan pada komunikasi dengan server.');
+  return new Error(error.message || 'Terjadi kesalahan komunikasi dengan server backend.');
 }
 
 export default apiClient;
-

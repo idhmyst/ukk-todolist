@@ -8,6 +8,7 @@ type Todo struct {
 	Title       string    `gorm:"type:varchar(255);not null" json:"title" binding:"required"`
 	Priority    string    `gorm:"type:varchar(10);default:'medium'" json:"priority"`
 	IsCompleted bool      `gorm:"default:false" json:"is_completed"`
+	DueDate     string    `gorm:"type:varchar(50)" json:"due_date"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -16,6 +17,7 @@ type Todo struct {
 type CreateTodoInput struct {
 	Title    string `json:"title" binding:"required"`
 	Priority string `json:"priority"`
+	DueDate  string `json:"due_date"`
 }
 
 // UpdateTodoInput struct validasi payload request PUT /api/todos/:id
@@ -24,5 +26,5 @@ type UpdateTodoInput struct {
 	Title       *string `json:"title"`
 	Priority    *string `json:"priority"`
 	IsCompleted *bool   `json:"is_completed"`
+	DueDate     *string `json:"due_date"`
 }
-

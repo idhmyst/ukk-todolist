@@ -18,9 +18,9 @@ func main() {
 	// 2. Inisialisasi Gin Engine
 	r := gin.Default()
 
-	// 3. Konfigurasi Middleware CORS untuk Frontend React (http://localhost:5173)
+	// 3. Konfigurasi Middleware CORS untuk Frontend React (http://localhost:5173 & http://localhost:5174)
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
 		ExposeHeaders:    []string{"Content-Length"},

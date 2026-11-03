@@ -1,9 +1,9 @@
-# 🚀 Fullstack To-Do List Application — CakeAdmin Dashboard (UKK PPLG SMK)
+# 🚀 Fullstack To-Do List Application — UKK PPLG SMK
 
-Aplikasi manajemen tugas (To-Do List) berbasis **Fullstack Web** dengan tampilan antarmuka modern **CakeAdmin Dashboard**, dirancang khusus untuk memenuhi standar pengujian **Uji Kompetensi Keahlian (UKK) Program Keahlian Pengembangan Perangkat Lunak dan GIM (PPLG)**.
+Aplikasi manajemen tugas (To-Do List) berbasis **Fullstack Web** modern, elegan, dan responsif yang dibangun khusus untuk pengujian **Uji Kompetensi Keahlian (UKK) Program Keahlian Pengembangan Perangkat Lunak dan GIM (PPLG)**.
 
 Proyek ini menerapkan arsitektur *Client-Server* modern yang memisahkan antara frontend dan backend secara independen (*decoupled architecture*):
-- **Frontend**: Executive Admin Dashboard berbasis **React (Vite)** dan **Tailwind CSS**.
+- **Frontend**: Single Page Application (SPA) berbasis **React (Vite)** dan **Tailwind CSS**.
 - **Backend**: High-performance RESTful API berbasis **Golang (Gin Framework)** dan **GORM ORM** terhubung ke **MySQL Database**.
 
 ---
@@ -14,16 +14,16 @@ Proyek ini menerapkan arsitektur *Client-Server* modern yang memisahkan antara f
 ukk-todolist/
 ├── todo-backend/             # REST API Golang (Gin + GORM + MySQL)
 │   ├── config/               # Koneksi database & auto-migration
-│   ├── controllers/          # Logika CRUD to-do
-│   ├── models/               # Struct model data & payload input
-│   ├── main.go               # Server runner & router Gin (:8080)
+│   ├── controllers/          # Logika CRUD to-do (Get, Create, Update, Delete)
+│   ├── models/               # Struct model data (id, title, priority, due_date, is_completed)
+│   ├── main.go               # Entrypoint & router Gin (:8080)
 │   └── README.md             # Dokumentasi teknis backend
 │
-└── todo-frontend/            # Client Dashboard React (CakeAdmin UI + Tailwind CSS)
+└── todo-frontend/            # Client SPA React (Vite + Tailwind CSS)
     ├── src/
-    │   ├── components/       # Komponen UI modular (Sidebar, Header, Toolbar, Rows, Modals)
-    │   ├── services/         # Axios client untuk REST API backend
-    │   ├── App.jsx           # State management, filter, sorting & optimistic UI
+    │   ├── components/       # Komponen UI: Navbar, TodoForm, FilterBar, TodoItem, EditModal, dll
+    │   ├── services/         # Axios client untuk REST API backend (:8080)
+    │   ├── App.jsx           # State management, filter, search, & optimistic UI
     │   └── main.jsx          # Entrypoint React
     ├── index.html            # Template HTML utama
     ├── tailwind.config.js    # Konfigurasi Tailwind CSS

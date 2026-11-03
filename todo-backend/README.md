@@ -30,6 +30,7 @@ todo-backend/
 ├── go.mod                   # Deklarasi modul dan versi dependensi Go
 ├── go.sum                   # Checksum dependensi Go untuk integritas build
 ├── main.go                  # Entrypoint: setup Gin, CORS, Routing, dan Server Runner
+├── .gitignore               # Konfigurasi file yang diabaikan Git
 └── README.md                # Dokumentasi lengkap proyek
 ```
 
@@ -45,6 +46,7 @@ Model `Todo` dipetakan ke tabel `todos` di database MySQL:
 | `title` | `string` | `VARCHAR(255) NOT NULL` | Judul tugas (wajib diisi) |
 | `priority` | `string` | `VARCHAR(10) DEFAULT 'medium'` | Tingkat urgensi: `low`, `medium`, `high` |
 | `is_completed`| `bool` | `TINYINT(1) DEFAULT 0` | Status selesai tugas (`false` / `true`) |
+| `due_date` | `string` | `VARCHAR(50)` | Tanggal deadline (opsional / nullable) |
 | `created_at` | `time.Time` | `DATETIME` | Waktu tugas dibuat |
 | `updated_at` | `time.Time` | `DATETIME` | Waktu tugas terakhir diubah |
 
@@ -71,13 +73,15 @@ Model `Todo` dipetakan ke tabel `todos` di database MySQL:
 Buka aplikasi **Laragon** di komputer Anda, lalu klik tombol **Start All** hingga status Apache & MySQL berubah menjadi aktif (*Running*).
 
 ### 2. Buka Terminal pada Folder Proyek
-Navigasikan terminal PowerShell / Command Prompt ke folder `todo-backend`:
+Navigasikan terminal ke folder `todo-backend`:
 ```powershell
 cd d:\TELKOM\ukk-todolist\todo-backend
 ```
 
-### 3. Unduh Dependensi (Bila diperlukan)
+### 3. Inisialisasi & Unduh Dependensi
 ```powershell
+go mod init todo-backend
+go get github.com/gin-gonic/gin github.com/gin-contrib/cors@v1.7.2 gorm.io/gorm gorm.io/driver/mysql
 go mod tidy
 ```
 
@@ -101,7 +105,7 @@ Jika berhasil, terminal akan menampilkan output:
 Base URL: `http://localhost:8080`
 
 ### 1. Health Check
-Memeriksa apakah server backend sedang aktif.
+Memeriksa status aktif server backend.
 - **Method**: `GET`
 - **URL**: `/`
 - **Response `200 OK`**:
@@ -115,7 +119,7 @@ Memeriksa apakah server backend sedang aktif.
 ---
 
 ### 2. Mengambil Semua To-Do
-Mengambil daftar seluruh to-do yang diurutkan dari yang terbaru (`id` descending).
+Mengambil daftar seluruh to-do yang diurutkan dari ID terbesar/terbaru (`id` descending).
 - **Method**: `GET`
 - **URL**: `/api/todos`
 - **Response `200 OK`**:
@@ -127,6 +131,7 @@ Mengambil daftar seluruh to-do yang diurutkan dari yang terbaru (`id` descending
       "title": "Membuat Desain UI Frontend",
       "priority": "high",
       "is_completed": false,
+      "due_date": "2026-11-10",
       "created_at": "2026-11-03T07:20:00+07:00",
       "updated_at": "2026-11-03T07:20:00+07:00"
     }
@@ -145,10 +150,11 @@ Menambahkan catatan to-do baru ke database.
 ```json
 {
   "title": "Belajar React dan Golang",
-  "priority": "high"
+  "priority": "high",
+  "due_date": "2026-11-05"
 }
 ```
-*Catatan: `priority` bersifat opsional (default: `'medium'`). Nilai yang diizinkan: `'low'`, `'medium'`, `'high'`.*
+*Catatan: `priority` bersifat opsional (default: `'medium'`). `due_date` bersifat opsional.*
 
 - **Response `201 Created`**:
 ```json
@@ -158,6 +164,7 @@ Menambahkan catatan to-do baru ke database.
     "title": "Belajar React dan Golang",
     "priority": "high",
     "is_completed": false,
+    "due_date": "2026-11-05",
     "created_at": "2026-11-03T07:21:00+07:00",
     "updated_at": "2026-11-03T07:21:00+07:00"
   }
@@ -173,7 +180,7 @@ Menambahkan catatan to-do baru ke database.
 ---
 
 ### 4. Mengubah To-Do
-Mengubah judul, prioritas, atau status selesai (`is_completed`) berdasarkan ID.
+Mengubah judul, prioritas, deadline (`due_date`), atau status selesai (`is_completed`) berdasarkan ID.
 - **Method**: `PUT`
 - **URL**: `/api/todos/:id`
 - **Header**: `Content-Type: application/json`
@@ -183,11 +190,12 @@ Mengubah judul, prioritas, atau status selesai (`is_completed`) berdasarkan ID.
   "is_completed": true
 }
 ```
-- **Request Body (Contoh Update Judul & Prioritas)**:
+- **Request Body (Contoh Update Data Lengkap)**:
 ```json
 {
   "title": "Belajar React, Golang, dan Docker",
-  "priority": "medium",
+  "priority": "high",
+  "due_date": "2026-11-15",
   "is_completed": true
 }
 ```
@@ -197,8 +205,9 @@ Mengubah judul, prioritas, atau status selesai (`is_completed`) berdasarkan ID.
   "data": {
     "id": 2,
     "title": "Belajar React, Golang, dan Docker",
-    "priority": "medium",
+    "priority": "high",
     "is_completed": true,
+    "due_date": "2026-11-15",
     "created_at": "2026-11-03T07:21:00+07:00",
     "updated_at": "2026-11-03T07:22:15+07:00"
   }
@@ -244,13 +253,11 @@ Backend telah dilengkapi middleware CORS menggunakan `github.com/gin-contrib/cor
 
 ## 🧪 Contoh Pengujian API (cURL)
 
-Anda dapat langsung menguji endpoint melalui Terminal menggunakan perintah cURL berikut:
-
 ```bash
-# 1. Tambah Tugas Baru
+# 1. Tambah Tugas Baru dengan Due Date
 curl -X POST http://localhost:8080/api/todos \
   -H "Content-Type: application/json" \
-  -d "{\"title\":\"Selesaikan Proyek UKK PPLG\",\"priority\":\"high\"}"
+  -d "{\"title\":\"Selesaikan Proyek UKK PPLG\",\"priority\":\"high\",\"due_date\":\"2026-11-10\"}"
 
 # 2. Ambil Semua Daftar Tugas
 curl http://localhost:8080/api/todos
@@ -263,10 +270,3 @@ curl -X PUT http://localhost:8080/api/todos/1 \
 # 4. Hapus Tugas (ID 1)
 curl -X DELETE http://localhost:8080/api/todos/1
 ```
-
----
-
-## 👨‍💻 Penulis
-Dibuat untuk kebutuhan Penilaian Uji Kompetensi Keahlian (**UKK**) — **PPLG SMK**.
-Semoga sukses dalam ujian UKK! 🎉
-

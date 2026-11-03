@@ -13,7 +13,7 @@ import (
 // GetTodos mengambil seluruh daftar tugas terurut dari ID terbesar/terbaru
 // GET /api/todos
 func GetTodos(c *gin.Context) {
-	// Inisialisasi slice kosong agar menghasilkan JSON [] bukannya null saat data kosong
+	// Inisialisasi slice kosong agar menghasilkan JSON [] bukannya null saat data masih kosong
 	todos := make([]models.Todo, 0)
 
 	if err := config.DB.Order("id desc").Find(&todos).Error; err != nil {
@@ -57,6 +57,7 @@ func CreateTodo(c *gin.Context) {
 		Title:       trimmedTitle,
 		Priority:    priority,
 		IsCompleted: false,
+		DueDate:     strings.TrimSpace(input.DueDate),
 	}
 
 	if err := config.DB.Create(&todo).Error; err != nil {
@@ -71,7 +72,7 @@ func CreateTodo(c *gin.Context) {
 	})
 }
 
-// UpdateTodo mengupdate judul, prioritas, atau status penyelesaian (is_completed)
+// UpdateTodo mengupdate judul, prioritas, tanggal deadline, atau status penyelesaian (is_completed)
 // PUT /api/todos/:id
 func UpdateTodo(c *gin.Context) {
 	id := c.Param("id")
@@ -110,11 +111,15 @@ func UpdateTodo(c *gin.Context) {
 		}
 	}
 
+	if input.DueDate != nil {
+		updates["due_date"] = strings.TrimSpace(*input.DueDate)
+	}
+
 	if input.IsCompleted != nil {
 		updates["is_completed"] = *input.IsCompleted
 	}
 
-	// Eksekusi update jika ada field yang diubah
+	// Eksekusi update jika ada field yang dikirim
 	if len(updates) > 0 {
 		if err := config.DB.Model(&todo).Updates(updates).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -157,4 +162,3 @@ func DeleteTodo(c *gin.Context) {
 		"message": "To-do berhasil dihapus",
 	})
 }
-

@@ -1,70 +1,8 @@
-# 📋 Task Manager — CakeAdmin Todo Dashboard (UKK PPLG SMK)
+# 📋 Task Manager — UKK PPLG SMK (Frontend React Vite)
 
-Frontend Single Page Application (**SPA**) modern dengan desain antarmuka dashboard eksekutif (**CakeAdmin UI**) untuk aplikasi **To-Do List** yang dibangun khusus untuk penilaian **Uji Kompetensi Keahlian (UKK) Program Keahlian Pengembangan Perangkat Lunak dan GIM (PPLG)**.
+Aplikasi To-Do List modern, elegan, dan responsif yang dibangun khusus untuk pengujian **Uji Kompetensi Keahlian (UKK) Program Keahlian Pengembangan Perangkat Lunak dan GIM (PPLG)**.
 
-Aplikasi ini dikembangkan menggunakan **React (Vite)** dan **Tailwind CSS**, terhubung secara real-time dengan REST API **Golang (Gin)** dan database **MySQL**.
-
----
-
-## 🎨 Tampilan & Fitur-Fitur Baru (CakeAdmin Style)
-
-Sesuai dengan desain dashboard referensi modern, fitur-fitur yang disajikan meliputi:
-
-### 1. 🗂️ Left Sidebar Navigation
-- **Brand & Logo**: Identitas CakeAdmin dengan badge UKK PPLG.
-- **User Profile Widget**: Foto avatar, nama pengguna (*Timotheus Bendan*), dan role (*Admin • PPLG SMK*).
-- **Menu Navigasi Lengkap**:
-  - **Dashboard**: Dashboard, Orders, Products, Buyer, Customers, Invoices.
-  - **Apps**: Chats (badge aktif), Email App, dan **Todo App** (Submenu: *List* [Aktif] & *Details*).
-  - **Pages**: Profile & Settings.
-- **Dukungan Mobile Responsive**: Sidebar dapat di-toggle (*slide-in/out*) dengan tombol hamburger pada layar ponsel/tablet.
-
-### 2. 🔝 Top Header / Navbar
-- **Judul Halaman**: *"Todo List"*.
-- **Pencarian Global**: Input bar *Search...* di tengah header.
-- **Live Status Indikator Backend**: Badge deteksi status koneksi real-time ke Golang API (🟢 *Online (8080)* / 🔴 *Offline*) dan tombol sinkronisasi refresh.
-- **Notifikasi & Aktivitas**: Ikon lonceng notifikasi (badge count 2) dan task bag (badge count 3).
-- **Tombol Utama "+ Add Task"**: Membuka popup dialog modal untuk membuat tugas baru.
-
-### 3. 🛠️ Toolbar Kontrol Tugas (Center Toolbar)
-- **Bulk Select (Pilih Semua)**: Checkbox interaktif untuk memilih semua tugas, sebagian, atau membatalkan pilihan.
-- **Bulk Action**: Tombol cepat untuk menandai selesai atau menghapus banyak tugas sekaligus saat checkbox dipilih.
-- **Order by (Pengurutan Dinamis)**:
-  - 🕒 Terbaru (*Newest*)
-  - ⏳ Terlama (*Oldest*)
-  - ⚡ Prioritas (*High → Low*)
-  - 🔤 Abjad (*Judul A - Z*)
-- **Pencarian Realtime (*Search todo list...*)**: Menyaring tugas secara instan berdasarkan judul, kategori, atau tingkat prioritas.
-
-### 4. 📝 Kartu Baris Tugas (Todo Row Item)
-- **Drag Handle Dots (`:::`)**: Penanda visual tata letak tugas.
-- **Custom Purple Checkbox**: Memicu update status ke backend Golang `PUT /api/todos/:id`.
-- **Tandai Bintang / Favorit (⭐ Favorites)**: Tombol bintang untuk menandai tugas penting.
-- **Coretan Teks (*Strikethrough*)**: Judul tugas otomatis dicoret rapi saat status selesai.
-- **Badge Kategori Berwarna Cerah (*Vibrant Category Tags*)**:
-  - 🔴 `Social` (Merah/Rose)
-  - 🟡 `Theme Support` (Kuning/Amber)
-  - 🔵 `Friends` (Biru/Sky)
-  - 🟢 `Freelance` (Hijau/Emerald)
-  - 🟣 `Coding` (Ungu/Purple)
-  - 🟪 `UKK Project` (Indigo)
-- **Avatar Kolaborator / Tim**: Stack avatar foto melingkar bertumpuk rapi di setiap kartu tugas.
-- **Menu Aksi Tiga Titik (`...`)**:
-  - Tandai Selesai / Belum Selesai
-  - Tambah / Hapus Bintang Favorit
-  - **Edit Tugas** (Membuka Edit Modal untuk mengubah judul & prioritas)
-  - Hapus Tugas
-
-### 5. 📑 Panel Filter Samping Kanan (Right Filter Panel)
-- **All**: Menampilkan seluruh tugas beserta total badge hitungan.
-- **My Task**: Menampilkan tugas aktif saya.
-- **Favorites**: Menyaring hanya tugas yang telah ditandai bintang (⭐).
-- **Done**: Menyaring hanya tugas yang telah selesai dikerjakan beserta badge hitungan.
-- **Deleted**: Indikator riwayat tugas.
-
-### 6. 🪟 Dialog Modal Interaktif
-- **Add Task Modal**: Dialog modern saat tombol "+ Add Task" diklik untuk menginputkan Judul, Prioritas (Low, Medium, High), dan Kategori.
-- **Edit Task Modal**: Dialog untuk memperbarui judul dan detail tugas (memicu `PUT /api/todos/:id`).
+Frontend ini terhubung secara langsung (*real-time*) dengan Backend REST API **Golang (Gin)** dan database MySQL.
 
 ---
 
@@ -72,68 +10,145 @@ Sesuai dengan desain dashboard referensi modern, fitur-fitur yang disajikan meli
 
 | Komponen | Teknologi | Keterangan |
 | :--- | :--- | :--- |
-| **Framework / Library** | [React](https://react.dev/) 18 | Functional Components & Hooks (`useState`, `useEffect`, `useCallback`, `useMemo`) |
-| **Bundler / Build Tool** | [Vite](https://vitejs.dev/) 5 | Kompilasi ultra cepat & Hot Module Replacement |
-| **CSS Styling** | [Tailwind CSS](https://tailwindcss.com/) 3 | Desain modern dashboard dengan utility classes |
-| **Icons** | [Lucide React](https://lucide.dev/) | Paket ikon lengkap |
-| **HTTP Client** | [Axios](https://axios-http.com/) | REST API caller dengan error handling & timeout |
+| **Framework / Library** | [React](https://react.dev/) 18 | Functional Components & Hooks (`useState`, `useEffect`, `useMemo`, `useCallback`) |
+| **Build Tool / Bundler** | [Vite](https://vitejs.dev/) 5 | Super cepat, Hot Module Replacement (HMR) |
+| **CSS Framework** | [Tailwind CSS](https://tailwindcss.com/) 3 | Desain modern, elegan, responsif dengan layout card terpusat |
+| **HTTP Client** | [Axios](https://axios-http.com/) | Konsumsi REST API dengan error normalization dan timeout |
+| **Iconography** | [Lucide React](https://lucide.dev/) | Icon pack modern dan clean |
 
 ---
 
-## 📁 Struktur Direktori Komponen Baru
+## 📁 Struktur Komponen Modular
+
+Proyek telah dibersihkan dari menu-menu dummy dan dipecah secara rapi serta modular:
 
 ```text
 todo-frontend/
 ├── src/
 │   ├── components/
-│   │   ├── Sidebar.jsx           # Navigasi kiri CakeAdmin, user profile, dan list apps
-│   │   ├── TopHeader.jsx         # Header atas: Title, Search, Notifikasi, Status API, & "+ Add Task"
-│   │   ├── RightFilterPanel.jsx  # Panel samping kanan (All, My Task, Favorites, Done, Deleted)
-│   │   ├── TodoToolbar.jsx       # Toolbar tengah: Select all, Order by, dan Search box
-│   │   ├── TodoRowItem.jsx       # Baris to-do: Checkbox, Bintang ⭐, Tag warna, Avatars, Menu (...)
-│   │   ├── AddTaskModal.jsx      # Modal popup tambah tugas baru
-│   │   ├── EditTaskModal.jsx     # Modal popup edit judul & prioritas tugas
-│   │   ├── LoadingSkeleton.jsx   # Shimmer animasi saat data pertama kali dimuat
-│   │   ├── EmptyState.jsx        # Tampilan kosong ramah per filter
-│   │   └── ErrorAlert.jsx        # Alert saat server backend Golang belum dinyalakan
+│   │   ├── Navbar.jsx          # Header "Task Manager - UKK PPLG" & badge status koneksi API
+│   │   ├── TodoForm.jsx        # Form card input: Judul (required), Prioritas, Due Date, & Tombol Submit
+│   │   ├── FilterBar.jsx       # Real-time search bar, Tab filter (Semua/Pending/Selesai), & Counter
+│   │   ├── TodoItem.jsx        # Card tugas: Checkbox PUT, badge prioritas, deadline, tombol edit & hapus
+│   │   ├── EditModal.jsx       # Modal popup edit cepat untuk mengubah judul, prioritas, dan deadline
+│   │   ├── LoadingSkeleton.jsx # Animasi shimmer placeholder saat pertama kali mengambil data
+│   │   ├── EmptyState.jsx      # Ilustrasi & pesan informatif jika belum ada data atau pencarian nihil
+│   │   └── ErrorAlert.jsx      # Banner alert jika server backend Golang belum dinyalakan di port 8080
 │   ├── services/
-│   │   └── api.js                # Modul komunikasi HTTP REST API Golang (:8080)
-│   ├── App.jsx                   # State global, filter, sorting, optimistic update & toast
-│   ├── index.css                 # Style dasar Tailwind CSS
-│   └── main.jsx                  # Entrypoint React
-├── index.html
-├── package.json
-├── tailwind.config.js
-├── vite.config.js
-└── README.md
+│   │   └── api.js              # Modul terpusat komunikasi Axios REST API Golang
+│   ├── App.jsx                 # Komponen utama (State, Filter, Search, Optimistic UI, & Toast)
+│   ├── index.css               # Setup Tailwind CSS & custom styling
+│   └── main.jsx                # Entry point React
+├── index.html                  # HTML template + Google Font Inter
+├── package.json                # Daftar dependensi & script build
+├── tailwind.config.js          # Konfigurasi Tailwind CSS
+├── postcss.config.js           # Konfigurasi PostCSS & Autoprefixer
+├── vite.config.js              # Konfigurasi dev server port 5173
+├── .gitignore                  # Git ignore untuk node_modules, dist, .env, dll
+└── README.md                   # Dokumentasi lengkap proyek
 ```
 
 ---
 
-## 🌐 Endpoint REST API Backend Golang yang Terhubung
+## 🌐 Struktur Data & Endpoint REST API Golang
 
-Frontend tetap terhubung secara aman dan penuh ke backend Golang:
+### Struktur Data Todo (JSON)
+```json
+{
+  "id": 1,
+  "title": "Menyelesaikan Modul UKK PPLG",
+  "priority": "high",
+  "is_completed": false,
+  "due_date": "2026-11-10",
+  "created_at": "2026-11-03T07:22:00Z"
+}
+```
 
-| HTTP Method | Endpoint | Request Payload | Response Data |
-| :--- | :--- | :--- | :--- |
-| **GET** | `/api/todos` | *None* | `{"data": [...]}` |
-| **POST** | `/api/todos` | `{"title": "...", "priority": "high"}` | `{"data": {...}}` |
-| **PUT** | `/api/todos/:id` | `{"is_completed": true}` *atau* `{"title": "...", "priority": "..."}` | `{"data": {...}}` |
-| **DELETE** | `/api/todos/:id` | *None* | `{"message": "..."}` |
+### Spesifikasi Endpoint API yang Dikonsumsi
+Base URL: `http://localhost:8080/api/todos`
+
+| Method | Endpoint | Request Payload | Response Data | Keterangan |
+| :--- | :--- | :--- | :--- | :--- |
+| **GET** | `/api/todos` | *None* | `{"data": [...]}` | Mengambil seluruh daftar tugas |
+| **POST** | `/api/todos` | `{"title": "...", "priority": "high", "due_date": "..."}` | `{"data": {...}}` | Menambahkan tugas baru |
+| **PUT** | `/api/todos/:id` | `{"is_completed": true}` *atau* `{"title": "...", "priority": "...", "due_date": "..."}` | `{"data": {...}}` | Update status selesai atau edit data tugas |
+| **DELETE** | `/api/todos/:id` | *None* | `{"message": "..."}` | Menghapus tugas berdasarkan ID |
 
 ---
 
-## 🛠️ Cara Menjalankan Frontend
+## 💡 Fitur-Fitur Utama
 
+1. **Header / Navbar:**
+   - Judul elegan *"Task Manager - UKK PPLG"*.
+   - Badge live status koneksi API (🟢 *Online (8080)* / 🔴 *Offline*) dan tombol sinkronisasi refresh.
+2. **Form Tambah Tugas (Card Input):**
+   - Validasi input judul (tidak boleh kosong atau hanya berisi spasi).
+   - Pilihan Prioritas Berwarna:
+     - 🟢 **Low** (Hijau)
+     - 🟡 **Medium** (Kuning/Oranye)
+     - 🔴 **High** (Merah)
+   - Input tanggal tenggat waktu (*due date*) opsional.
+   - Tombol "Tambah Tugas" dengan animasi loading spinner saat request dikirim.
+3. **Kontrol, Tab Filter & Pencarian:**
+   - **Search bar real-time**: Menyaring tugas secara instan berdasarkan judul atau prioritas.
+   - **Filter Tab**: *Semua*, *Belum Selesai (Pending)*, dan *Selesai (Completed)* dengan counter badge.
+   - **Counter Tugas**: Menampilkan jumlah tugas yang belum diselesaikan (*contoh: "3 tugas belum selesai"*).
+4. **List Item Tugas:**
+   - Checkbox untuk toggle `is_completed` (memicu `PUT /api/todos/:id`).
+   - Teks otomatis dicoret (*strikethrough*) dan memudar saat selesai.
+   - Badge warna prioritas yang tegas dan jelas.
+   - Informasi tanggal deadline (*due date*) dengan ikon kalender.
+   - Tombol **Edit Cepat** yang membuka `EditModal.jsx` untuk mengubah judul, prioritas, dan deadline.
+   - Tombol **Hapus** dengan dialog konfirmasi singkat (*Hapus / Batal*).
+5. **State Handling & Kerapian UX:**
+   - **Loading Skeleton**: Shimmer pulse saat pertama kali mengambil data dari backend.
+   - **Empty State**: Tampilan visual ramah saat tugas kosong atau hasil pencarian tidak ditemukan.
+   - **Error Alert**: Banner informatif jika backend Golang belum dijalankan di port 8080, dilengkapi petunjuk terminal dan tombol *"Coba Lagi"*.
+   - **Optimistic UI Updates**: Respons instan pada checkbox dengan kemampuan *rollback* otomatis jika server gagal.
+   - **Floating Toast**: Notifikasi singkat saat tugas berhasil ditambahkan, diubah, maupun dihapus.
+
+---
+
+## 🛠️ Instruksi Setup & Menjalankan
+
+### 1. Masuk ke Direktori Frontend
 ```powershell
-# 1. Masuk ke folder frontend
 cd todo-frontend
+```
 
-# 2. Install dependensi
+### 2. Instalasi Dependensi
+```powershell
 npm install
+```
 
-# 3. Jalankan server Vite
+### 3. Konfigurasi Tailwind CSS (`tailwind.config.js`)
+File konfigurasi sudah terpasang rapi:
+```javascript
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
+    },
+  },
+  plugins: [],
+}
+```
+
+### 4. Menjalankan Server Pengembangan (Dev Server)
+```powershell
 npm run dev
 ```
+Aplikasi akan aktif di **`http://localhost:5173`**.
 
-Akses di browser: 👉 **http://localhost:5173**
+### 5. Build Produksi
+```powershell
+npm run build
+```
+Menghasilkan bundle statis yang telah dioptimasi di dalam folder `dist/`.
