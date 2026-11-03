@@ -1,0 +1,78 @@
+# ==========================================
+# Root .gitignore — UKK To-Do List Fullstack
+# ==========================================
+
+# -----------------
+# Node.js & Frontend
+# -----------------
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+dist-ssr/
+**/dist-ssr/
+build/
+**/build/
+.vite/
+**/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# -----------------
+# Golang & Backend
+# -----------------
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+main.exe
+**/main.exe
+*.test
+*.out
+go.work
+go.work.sum
+
+# -----------------
+# Environment Files & Secrets
+# -----------------
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# -----------------
+# Databases & Logs
+# -----------------
+*.log
+logs/
+**/logs/
+*.db
+*.sqlite
+*.sqlite3
+
+# -----------------
+# IDEs & Text Editors
+# -----------------
+.idea/
+**/.idea/
+.vscode/*
+!**/.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# -----------------
+# Operating System Files
+# -----------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
