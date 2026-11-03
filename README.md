@@ -1,6 +1,6 @@
-# 🚀 Fullstack To-Do List Application — UKK PPLG SMK
+# 🚀 Kelarin — Fullstack To-Do List Application (UKK PPLG SMK)
 
-Aplikasi manajemen tugas (To-Do List) berbasis **Fullstack Web** modern, elegan, dan responsif yang dibangun khusus untuk pengujian **Uji Kompetensi Keahlian (UKK) Program Keahlian Pengembangan Perangkat Lunak dan GIM (PPLG)**.
+**Kelarin** adalah aplikasi manajemen tugas (To-Do List) berbasis **Fullstack Web** modern, elegan, dan responsif yang dibangun khusus untuk pengujian **Uji Kompetensi Keahlian (UKK) Program Keahlian Pengembangan Perangkat Lunak dan GIM (PPLG)**.
 
 Proyek ini menerapkan arsitektur *Client-Server* modern yang memisahkan antara frontend dan backend secara independen (*decoupled architecture*):
 - **Frontend**: Single Page Application (SPA) berbasis **React (Vite)** dan **Tailwind CSS**.

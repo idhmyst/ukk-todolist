@@ -1,6 +1,6 @@
-# 📋 Task Manager — UKK PPLG SMK (Frontend React Vite)
+# 📋 Kelarin — To-Do List App (UKK PPLG SMK)
 
-Aplikasi To-Do List modern, elegan, dan responsif yang dibangun khusus untuk pengujian **Uji Kompetensi Keahlian (UKK) Program Keahlian Pengembangan Perangkat Lunak dan GIM (PPLG)**.
+Aplikasi To-Do List modern, elegan, dan responsif bernama **Kelarin** yang dibangun khusus untuk pengujian **Uji Kompetensi Keahlian (UKK) Program Keahlian Pengembangan Perangkat Lunak dan GIM (PPLG)**.
 
 Frontend ini terhubung secara langsung (*real-time*) dengan Backend REST API **Golang (Gin)** dan database MySQL.
 

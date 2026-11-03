@@ -72,7 +72,6 @@ export default function App() {
   // Handler: Toggle Status Selesai (PUT /api/todos/:id)
   const handleToggleStatus = async (id, nextStatus) => {
     const previousTodos = [...todos];
-    // Optimistic UI update
     setTodos((prev) =>
       prev.map((t) => (t.id === id ? { ...t, is_completed: nextStatus } : t))
     );
@@ -85,7 +84,6 @@ export default function App() {
         'success'
       );
     } catch (err) {
-      // Rollback jika request gagal
       setTodos(previousTodos);
       showToast(err.message || 'Gagal mengubah status tugas', 'error');
     }
@@ -133,14 +131,12 @@ export default function App() {
   const filteredTodos = useMemo(() => {
     let result = [...todos];
 
-    // Filter tab
     if (activeFilter === 'pending') {
       result = result.filter((t) => !t.is_completed);
     } else if (activeFilter === 'completed') {
       result = result.filter((t) => t.is_completed);
     }
 
-    // Search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter(
@@ -154,33 +150,32 @@ export default function App() {
   }, [todos, activeFilter, searchQuery]);
 
   return (
-    <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 bg-gradient-to-br from-slate-50 via-gray-100 to-indigo-50/30">
-      <div className="max-w-2xl mx-auto">
-        {/* Floating Toast Notification */}
-        {toast && (
-          <div className="fixed top-5 right-5 z-50 animate-bounce transition-all">
-            <div
-              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl shadow-lg border text-xs sm:text-sm font-semibold backdrop-blur-md ${
-                toast.type === 'error'
-                  ? 'bg-rose-50 text-rose-800 border-rose-200'
-                  : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-              }`}
-            >
-              {toast.type === 'error' ? (
-                <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
-              ) : (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              )}
-              <span>{toast.message}</span>
-            </div>
+    <div className="min-h-screen w-full max-w-full bg-slate-100/70 p-2 sm:p-5 lg:p-8 flex flex-col items-center justify-start overflow-x-hidden">
+      {/* Floating Toast Notification */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 animate-bounce transition-all max-w-[90vw]">
+          <div
+            className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl shadow-lg border text-xs sm:text-sm font-semibold backdrop-blur-md ${
+              toast.type === 'error'
+                ? 'bg-rose-50 text-rose-800 border-rose-200'
+                : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+            }`}
+          >
+            {toast.type === 'error' ? (
+              <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            )}
+            <span className="truncate">{toast.message}</span>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Main Card Container */}
-        <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-200/80 p-5 sm:p-8 transition-all">
+      {/* Main Container: 100% Fluid on Narrow Views, Ergonomic on Desktop */}
+      <div className="w-full max-w-5xl flex-1 flex flex-col min-w-0">
+        <div className="w-full max-w-full flex-1 bg-white rounded-2xl sm:rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-200/90 p-3 sm:p-6 lg:p-8 flex flex-col transition-all min-w-0 overflow-hidden">
           {/* Header & Navbar */}
           <Navbar
-            isBackendOnline={isBackendOnline}
             isRefreshing={isLoading}
             onRefresh={() => fetchTodosData(false)}
           />
@@ -207,7 +202,7 @@ export default function App() {
           />
 
           {/* List Item Tugas */}
-          <div className="space-y-3">
+          <div className="space-y-2.5 sm:space-y-3 flex-1 min-w-0 w-full max-w-full">
             {isLoading ? (
               <LoadingSkeleton />
             ) : filteredTodos.length === 0 ? (
@@ -223,12 +218,6 @@ export default function App() {
                 />
               ))
             )}
-          </div>
-
-          {/* Footer Card */}
-          <div className="mt-8 pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400">
-            <span>Uji Kompetensi Keahlian (UKK) • PPLG SMK</span>
-            <span>React (Vite) + Tailwind CSS + Golang Gin</span>
           </div>
         </div>
       </div>
