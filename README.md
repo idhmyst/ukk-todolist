@@ -1,42 +1,43 @@
 # 🚀 Kelarin — Fullstack To-Do List Application (UKK PPLG SMK)
 
-**Kelarin** adalah aplikasi manajemen tugas (To-Do List) berbasis **Fullstack Web** modern, elegan, dan responsif yang dibangun khusus untuk pengujian **Uji Kompetensi Keahlian (UKK) Program Keahlian Pengembangan Perangkat Lunak dan GIM (PPLG)**.
+Aplikasi manajemen tugas (**To-Do List**) modern, elegan, dan berstandar industri bernama **Kelarin** yang memisahkan antara frontend dan backend secara independen (*decoupled Client-Server architecture*) untuk standar penilaian **Uji Kompetensi Keahlian (UKK) Program Keahlian Pengembangan Perangkat Lunak dan GIM (PPLG)**.
 
-Proyek ini menerapkan arsitektur *Client-Server* modern yang memisahkan antara frontend dan backend secara independen (*decoupled architecture*):
-- **Frontend**: Single Page Application (SPA) berbasis **React (Vite)** dan **Tailwind CSS**.
-- **Backend**: High-performance RESTful API berbasis **Golang (Gin Framework)** dan **GORM ORM** terhubung ke **MySQL Database**.
+* **URL Live Deployment (Vercel)**: [https://kelarin-eight.vercel.app/](https://kelarin-eight.vercel.app/)
+* **Frontend Local**: `http://localhost:5173/`
+* **Backend Local**: `http://localhost:8080/`
 
 ---
 
-## 📂 Struktur Proyek
+## 🏗️ Gambaran Arsitektur Proyek
 
 ```text
 ukk-todolist/
-├── todo-backend/             # REST API Golang (Gin + GORM + MySQL)
-│   ├── config/               # Koneksi database & auto-migration
-│   ├── controllers/          # Logika CRUD to-do (Get, Create, Update, Delete)
-│   ├── models/               # Struct model data (id, title, priority, due_date, is_completed)
-│   ├── main.go               # Entrypoint & router Gin (:8080)
+├── todo-backend/             # RESTful API Golang (Gin Framework + GORM + MySQL)
+│   ├── config/               # database.go: Koneksi MySQL Laragon & Auto-Migration
+│   ├── controllers/          # todo_controller.go: Logika CRUD (Get, Create, Update, Delete)
+│   ├── models/               # todo.go: Struct Todo, CreateTodoInput, UpdateTodoInput
+│   ├── go.mod                # Modul dependensi Go
+│   ├── main.go               # Router Gin, Middleware CORS, Server Runner (:8080)
 │   └── README.md             # Dokumentasi teknis backend
 │
-└── todo-frontend/            # Client SPA React (Vite + Tailwind CSS)
+└── todo-frontend/            # Single Page Application React (Vite + Tailwind CSS)
     ├── src/
     │   ├── components/       # Komponen UI: Navbar, TodoForm, FilterBar, TodoItem, EditModal, dll
-    │   ├── services/         # Axios client untuk REST API backend (:8080)
-    │   ├── App.jsx           # State management, filter, search, & optimistic UI
-    │   └── main.jsx          # Entrypoint React
+    │   ├── services/         # api.js: Axios HTTP client terpusat
+    │   ├── App.jsx           # State management, filter, search, & Optimistic UI
+    │   └── main.jsx          # Entrypoint React Vite
     ├── index.html            # Template HTML utama
     ├── tailwind.config.js    # Konfigurasi Tailwind CSS
-    ├── vite.config.js        # Konfigurasi Vite dev server (:5173)
-    └── README.md             # Dokumentasi teknis frontend
+    ├── vite.config.js        # Konfigurasi dev server port 5173
+    └── README.md             # 📘 Panduan belajar lengkap & kisi-kisi ujian UKK
 ```
 
 ---
 
-## ⚡ Panduan Menjalankan Aplikasi
+## ⚡ Panduan Cepat Menjalankan Aplikasi
 
 ### 1. Prasyarat Sistem
-- **MySQL Server**: Aktif pada Laragon / XAMPP (port `3306`).
+- **Laragon / XAMPP**: Pastikan MySQL berjalan di port `3306`.
 - **Golang**: Versi `1.20+` terpasang.
 - **Node.js**: Versi `18+` terpasang.
 
@@ -48,7 +49,7 @@ cd todo-backend
 go run main.go
 ```
 > Server REST API akan berjalan di: **http://localhost:8080**  
-> Database `todo_db` dan tabel `todos` akan otomatis dibuat oleh sistem (*auto migration*).
+> Database `todo_db` dan tabel `todos` otomatis dibuat oleh sistem (*auto migration*).
 
 ---
 
@@ -61,3 +62,14 @@ npm run dev
 > Aplikasi web akan berjalan di: **http://localhost:5173**
 
 Buka peramban (browser) dan akses alamat **http://localhost:5173**.
+
+---
+
+## 📖 Dokumentasi Mendalam & Bahan Belajar UKK
+Untuk membaca penjelasan detail baris per baris mengenai:
+1. Cara kerja REST API, JSON, dan status code
+2. Arsitektur GORM dan struct Go
+3. Konsep React Hooks & Optimistic UI
+4. **Kisi-kisi 8 pertanyaan guru penguji UKK beserta kunci jawabannya**
+
+Silakan buka file: 👉 **[todo-frontend/README.md](file:///d:/TELKOM/ukk-todolist/todo-frontend/README.md)**.

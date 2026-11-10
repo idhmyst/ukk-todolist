@@ -1,11 +1,13 @@
 import React from 'react';
-import { ListFilter, CheckCheck, Clock, Search } from 'lucide-react';
+import { ListFilter, CheckCheck, Clock, Search, ArrowUpDown } from 'lucide-react';
 
 export default function FilterBar({
   activeFilter,
   onFilterChange,
   searchQuery,
   onSearchChange,
+  sortBy,
+  onSortChange,
   counts: { all, pending, completed },
 }) {
   const tabs = [
@@ -52,8 +54,8 @@ export default function FilterBar({
         )}
       </div>
 
-      {/* Tabs & Counter Row */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2.5 w-full max-w-full min-w-0">
+      {/* Tabs & Controls Row */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5 w-full max-w-full min-w-0">
         {/* Filter Tabs Container (Flex Wrap - will NEVER overflow) */}
         <div className="flex flex-wrap gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200 shadow-2xs w-full sm:w-auto max-w-full min-w-0">
           {tabs.map((tab) => {
@@ -85,17 +87,38 @@ export default function FilterBar({
           })}
         </div>
 
-        {/* Counter Info */}
-        <div className="text-xs font-semibold text-slate-600 self-start md:self-auto bg-slate-100 px-3 py-1 rounded-lg border border-slate-200 max-w-full truncate">
-          {pending === 0 && all > 0 ? (
-            <span className="text-emerald-700 font-bold flex items-center gap-1">
-              ✨ Semua tugas selesai!
-            </span>
-          ) : (
-            <span>
-              <strong className="text-indigo-700 font-extrabold">{pending}</strong> tugas belum selesai
-            </span>
-          )}
+        {/* Right side: Sort Selector & Pending Counter */}
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-between lg:justify-end min-w-0">
+          {/* Smart Sort Selector */}
+          <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs min-w-0">
+            <ArrowUpDown className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
+            <span className="hidden sm:inline text-slate-500 font-semibold text-[11px]">Urutkan:</span>
+            <select
+              id="sort-select"
+              value={sortBy}
+              onChange={(e) => onSortChange(e.target.value)}
+              className="bg-transparent border-none text-xs font-bold text-indigo-900 focus:outline-none cursor-pointer pr-1"
+              title="Pilih mode pengurutan tugas"
+            >
+              <option value="urgency">⚡ Urgensi & Deadline (Rekomendasi)</option>
+              <option value="deadline">📅 Deadline Terdekat</option>
+              <option value="priority">🔥 Prioritas Tertinggi</option>
+              <option value="newest">🕒 Terbaru Dibuat</option>
+            </select>
+          </div>
+
+          {/* Counter Info */}
+          <div className="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 max-w-full truncate shadow-2xs">
+            {pending === 0 && all > 0 ? (
+              <span className="text-emerald-700 font-bold flex items-center gap-1">
+                ✨ Semua selesai!
+              </span>
+            ) : (
+              <span>
+                <strong className="text-indigo-700 font-extrabold">{pending}</strong> belum selesai
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

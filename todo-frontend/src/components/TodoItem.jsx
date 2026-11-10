@@ -6,7 +6,10 @@ import {
   Trash2,
   Edit3,
   Loader2,
+  AlertTriangle,
+  Flame,
 } from 'lucide-react';
+import { getDeadlineInfo, formatIndonesianDate } from '../utils/todoHelpers';
 
 const PRIORITY_BADGES = {
   low: {
@@ -26,22 +29,6 @@ const PRIORITY_BADGES = {
   },
 };
 
-function formatIndonesianDate(dateString) {
-  if (!dateString) return '';
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-
-    return new Intl.DateTimeFormat('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    }).format(date);
-  } catch {
-    return dateString;
-  }
-}
-
 export default function TodoItem({
   todo,
   onToggleStatus,
@@ -54,6 +41,7 @@ export default function TodoItem({
 
   const priorityKey = (todo.priority || 'medium').toLowerCase();
   const priorityMeta = PRIORITY_BADGES[priorityKey] || PRIORITY_BADGES.medium;
+  const deadlineInfo = todo.due_date ? getDeadlineInfo(todo.due_date) : null;
 
   const handleToggle = async () => {
     if (isUpdating || isDeleting) return;
@@ -75,13 +63,28 @@ export default function TodoItem({
     }
   };
 
+  // Card appearance based on priority and urgency
+  let cardStyles = 'bg-white border-slate-200 hover:border-indigo-400 hover:shadow-sm';
+  if (todo.is_completed) {
+    cardStyles = 'bg-slate-50/80 border-slate-200/80 border-l-4 border-l-slate-300 shadow-none opacity-60';
+  } else if (priorityKey === 'high') {
+    if (deadlineInfo?.isOverdue) {
+      cardStyles = 'bg-rose-50/25 border-rose-200 border-l-4 border-l-rose-600 hover:border-rose-400 shadow-xs';
+    } else if (deadlineInfo?.isToday) {
+      cardStyles = 'bg-amber-50/25 border-amber-200 border-l-4 border-l-amber-500 hover:border-amber-400 shadow-xs';
+    } else {
+      cardStyles = 'bg-white border-slate-200 border-l-4 border-l-rose-500 hover:border-rose-300 hover:shadow-sm';
+    }
+  } else if (priorityKey === 'low') {
+    cardStyles = 'bg-white border-slate-200 border-l-4 border-l-emerald-500 hover:border-emerald-300 hover:shadow-sm';
+  } else {
+    // medium
+    cardStyles = 'bg-white border-slate-200 border-l-4 border-l-amber-400 hover:border-amber-300 hover:shadow-sm';
+  }
+
   return (
     <div
-      className={`group relative flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 w-full max-w-full min-w-0 ${
-        todo.is_completed
-          ? 'bg-slate-50/80 border-slate-200/80 shadow-none'
-          : 'bg-white border-slate-200 hover:border-indigo-400 hover:shadow-sm'
-      }`}
+      className={`group relative flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 w-full max-w-full min-w-0 ${cardStyles}`}
     >
       {/* Left side: Checkbox + Title + Badges */}
       <div className="flex items-start gap-2.5 sm:gap-3 flex-1 min-w-0">
@@ -127,12 +130,41 @@ export default function TodoItem({
               <span>{priorityMeta.label}</span>
             </span>
 
-            {/* Due Date (Deadline) Badge */}
+            {/* Smart Due Date (Deadline) Badge with Urgency Indicators */}
             {todo.due_date && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 max-w-full">
-                <Calendar className="w-3 h-3 text-indigo-600 flex-shrink-0" />
-                <span className="truncate">Deadline: {formatIndonesianDate(todo.due_date)}</span>
-              </span>
+              <>
+                {todo.is_completed ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200 max-w-full">
+                    <Calendar className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                    <span className="truncate">Deadline: {deadlineInfo?.formattedDate || formatIndonesianDate(todo.due_date)}</span>
+                  </span>
+                ) : deadlineInfo?.isOverdue ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs animate-pulse max-w-full">
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600 flex-shrink-0" />
+                    <span className="truncate">Terlewat ({Math.abs(deadlineInfo.diffDays)} hari) • {deadlineInfo.formattedDate}</span>
+                  </span>
+                ) : deadlineInfo?.isToday ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-amber-100 text-amber-900 border border-amber-400 shadow-2xs animate-pulse ring-1 ring-amber-300 max-w-full">
+                    <Flame className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                    <span className="truncate">Hari Ini! • {deadlineInfo.formattedDate}</span>
+                  </span>
+                ) : deadlineInfo?.isTomorrow ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300 max-w-full">
+                    <Clock className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                    <span className="truncate">Besok • {deadlineInfo.formattedDate}</span>
+                  </span>
+                ) : deadlineInfo?.isApproaching ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 max-w-full">
+                    <Calendar className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
+                    <span className="truncate">{deadlineInfo.diffDays} hari lagi ({deadlineInfo.formattedDate})</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 max-w-full">
+                    <Calendar className="w-3 h-3 text-slate-500 flex-shrink-0" />
+                    <span className="truncate">Deadline: {deadlineInfo?.formattedDate || formatIndonesianDate(todo.due_date)}</span>
+                  </span>
+                )}
+              </>
             )}
 
             {/* Creation Date */}
@@ -169,26 +201,24 @@ export default function TodoItem({
           <>
             {/* Edit Button */}
             <button
-              type="button"
               onClick={() => onEdit(todo)}
               disabled={isUpdating || isDeleting}
+              className="px-2.5 py-1.5 text-xs font-bold text-indigo-700 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors flex items-center gap-1 border border-indigo-200"
               title="Edit tugas"
-              className="inline-flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 border border-indigo-200 rounded-xl transition-all shadow-2xs hover:shadow-xs disabled:opacity-40"
             >
-              <Edit3 className="w-3.5 h-3.5 stroke-[2.2]" />
-              <span>Edit</span>
+              <Edit3 className="w-3.5 h-3.5" />
+              <span className="text-[11px] sm:text-xs">Edit</span>
             </button>
 
-            {/* Delete Button */}
+            {/* Delete Trigger Button */}
             <button
-              type="button"
               onClick={() => setShowConfirmDelete(true)}
               disabled={isUpdating || isDeleting}
+              className="px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors flex items-center gap-1 border border-rose-200"
               title="Hapus tugas"
-              className="inline-flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 border border-rose-200 rounded-xl transition-all shadow-2xs hover:shadow-xs disabled:opacity-40"
             >
-              <Trash2 className="w-3.5 h-3.5 stroke-[2.2]" />
-              <span>Hapus</span>
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="text-[11px] sm:text-xs">Hapus</span>
             </button>
           </>
         )}

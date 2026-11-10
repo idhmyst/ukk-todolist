@@ -8,6 +8,7 @@ import LoadingSkeleton from './components/LoadingSkeleton';
 import EmptyState from './components/EmptyState';
 import ErrorAlert from './components/ErrorAlert';
 import { getTodos, createTodo, updateTodo, deleteTodo } from './services/api';
+import { sortTodos } from './utils/todoHelpers';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function App() {
@@ -17,9 +18,10 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [isBackendOnline, setIsBackendOnline] = useState(false);
 
-  // Filters & Search
+  // Filters, Search & Smart Urgency Sorting
   const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'pending' | 'completed'
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('urgency'); // 'urgency' | 'deadline' | 'priority' | 'newest'
   const [editingTodo, setEditingTodo] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -127,7 +129,7 @@ export default function App() {
     return { all, pending, completed };
   }, [todos]);
 
-  // Filtered & Searched todos
+  // Filtered, Searched & Smart-Sorted todos
   const filteredTodos = useMemo(() => {
     let result = [...todos];
 
@@ -146,8 +148,9 @@ export default function App() {
       );
     }
 
-    return result;
-  }, [todos, activeFilter, searchQuery]);
+    // Urutkan berdasarkan tingkat urgensi & deadline
+    return sortTodos(result, sortBy);
+  }, [todos, activeFilter, searchQuery, sortBy]);
 
   return (
     <div className="min-h-screen w-full max-w-full bg-slate-100/70 p-2 sm:p-5 lg:p-8 flex flex-col items-center justify-start overflow-x-hidden">
@@ -192,12 +195,14 @@ export default function App() {
             />
           )}
 
-          {/* Filter Bar & Search */}
+          {/* Filter Bar, Search & Sort */}
           <FilterBar
             activeFilter={activeFilter}
             onFilterChange={setActiveFilter}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
             counts={counts}
           />
 
