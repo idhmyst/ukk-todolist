@@ -354,6 +354,15 @@ const handleToggleStatus = async (id, nextStatus) => {
 7. **100% Responsif di Semua Ukuran Layar**:
    * Di layar desktop: card membentang proporsional dan nyaman dibaca (`max-w-5xl`).
    * Di layar tablet/ponsel sempit: form dan tombol otomatis menata diri (*stacking* vertikal), serta tab filter otomatis membungkus diri (*flex-wrap*) tanpa ada konten yang terpotong ke kanan (*zero horizontal scrollbar*).
+8. **Widget Desktop Melayang (Dynamic Notch / Island Widget)**:
+   * **Desain Glassmorphism Gelap**: Widget notch melayang ala Dynamic Island di bagian atas layar desktop dengan gaya obsidian dark (`bg-zinc-950/95 backdrop-blur-2xl`).
+   * **3 Kolom Informasi Lengkap**:
+     * **Kiri**: Statistik pencapaian tugas (`1/4 Selesai`), persentase progress beres, dan formulir input tugas cepat (*Quick Add*).
+     * **Tengah**: Daftar tugas mendesak hari ini yang interaktif (bisa langsung dicentang selesai).
+     * **Kanan**: Jam digital real-time (jam, menit, detik) dan kalender horizontal 7 hari dalam minggu berjalan dengan penanda hari ini.
+   * **Dua Cara Akses**:
+     1. Klik tombol **Widget Desktop** di Navbar utama untuk pratinjau di layar atau membuka jendela melayang terpisah.
+     2. Jalankan file `buka-widget-desktop.bat` untuk membukanya sebagai widget desktop Windows tanpa border browser (*frameless app*).
 
 ---
 

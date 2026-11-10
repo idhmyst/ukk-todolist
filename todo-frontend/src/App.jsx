@@ -48,6 +48,25 @@ export default function App() {
   const [showClearCompletedModal, setShowClearCompletedModal] = useState(false);
   const [isClearingCompleted, setIsClearingCompleted] = useState(false);
 
+  // Desktop Floating Widget States
+  const isUrlWidget = useMemo(() => {
+    return new URLSearchParams(window.location.search).get('mode') === 'widget';
+  }, []);
+  const [isWidgetMode, setIsWidgetMode] = useState(false);
+
+  // Buka widget di jendela melayang desktop independen
+  const handlePopoutWidget = () => {
+    const width = 880;
+    const height = 230;
+    const left = Math.max(0, Math.round((window.screen.width - width) / 2));
+    const top = 10;
+    window.open(
+      `${window.location.origin}${window.location.pathname}?mode=widget`,
+      'KelarinDesktopWidget',
+      `width=${width},height=${height},top=${top},left=${left},status=no,menubar=no,toolbar=no,location=no,resizable=yes`
+    );
+  };
+
   // Helper Toast Feedback
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
@@ -217,6 +236,24 @@ export default function App() {
     return groupTodosByPriority(listToGroup);
   }, [activeTodos, filteredTodos, activeFilter, sortBy]);
 
+  // Jika aplikasi dibuka dalam mode pop-up widget desktop murni (?mode=widget)
+  if (isUrlWidget) {
+    return (
+      <main className="min-h-screen w-full bg-transparent p-2 flex flex-col items-center justify-start overflow-hidden">
+        <DesktopWidget
+          todos={todos}
+          onToggleStatus={handleToggleStatus}
+          onAddTodo={handleAddTodo}
+          onRefresh={() => fetchTodosData(false)}
+          isRefreshing={isLoading}
+          onExitWidget={() => {
+            window.location.href = window.location.pathname;
+          }}
+        />
+      </main>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full max-w-full bg-slate-100/70 p-2 sm:p-5 lg:p-8 flex flex-col items-center justify-start overflow-x-hidden">
       {/* Floating Toast Notification */}
@@ -239,6 +276,38 @@ export default function App() {
         </div>
       )}
 
+      {/* Widget Mode Preview (Jika diaktifkan di layar ini) */}
+      {isWidgetMode && (
+        <div className="w-full max-w-4xl mb-5 animate-in slide-in-from-top-4 duration-200">
+          <div className="flex items-center justify-between mb-1.5 px-2">
+            <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+              <span>Pratinjau Widget Desktop</span>
+              <span className="text-[10px] text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+                Dynamic Notch
+              </span>
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handlePopoutWidget}
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>Buka Jendela Melayang</span>
+                <span className="text-[10px]">↗</span>
+              </button>
+            </div>
+          </div>
+          <DesktopWidget
+            todos={todos}
+            onToggleStatus={handleToggleStatus}
+            onAddTodo={handleAddTodo}
+            onRefresh={() => fetchTodosData(false)}
+            isRefreshing={isLoading}
+            onExitWidget={() => setIsWidgetMode(false)}
+          />
+        </div>
+      )}
+
       {/* Main Container: 100% Fluid on Narrow Views, Ergonomic on Desktop */}
       <div className="w-full max-w-5xl flex-1 flex flex-col min-w-0">
         <div className="w-full max-w-full flex-1 bg-white rounded-2xl sm:rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-200/90 p-3 sm:p-6 lg:p-8 flex flex-col transition-all min-w-0 overflow-hidden">
@@ -246,6 +315,7 @@ export default function App() {
           <Navbar
             isRefreshing={isLoading}
             onRefresh={() => fetchTodosData(false)}
+            onToggleWidgetMode={() => setIsWidgetMode(!isWidgetMode)}
           />
 
           {/* Form Tambah Tugas */}
