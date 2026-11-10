@@ -276,36 +276,17 @@ export default function App() {
         </div>
       )}
 
-      {/* Widget Mode Preview (Jika diaktifkan di layar ini) */}
+      {/* Dynamic Notch Desktop Widget Overlay */}
       {isWidgetMode && (
-        <div className="w-full max-w-4xl mb-5 animate-in slide-in-from-top-4 duration-200">
-          <div className="flex items-center justify-between mb-1.5 px-2">
-            <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
-              <span>Pratinjau Widget Desktop</span>
-              <span className="text-[10px] text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
-                Dynamic Notch
-              </span>
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handlePopoutWidget}
-                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <span>Buka Jendela Melayang</span>
-                <span className="text-[10px]">↗</span>
-              </button>
-            </div>
-          </div>
-          <DesktopWidget
-            todos={todos}
-            onToggleStatus={handleToggleStatus}
-            onAddTodo={handleAddTodo}
-            onRefresh={() => fetchTodosData(false)}
-            isRefreshing={isLoading}
-            onExitWidget={() => setIsWidgetMode(false)}
-          />
-        </div>
+        <DesktopWidget
+          todos={todos}
+          onToggleStatus={handleToggleStatus}
+          onAddTodo={handleAddTodo}
+          onRefresh={() => fetchTodosData(false)}
+          isRefreshing={isLoading}
+          onExitWidget={() => setIsWidgetMode(false)}
+          isStandalone={false}
+        />
       )}
 
       {/* Main Container: 100% Fluid on Narrow Views, Ergonomic on Desktop */}

@@ -9,6 +9,6 @@ echo - Backend: http://localhost:8080
 echo - Frontend: http://localhost:5173
 echo.
 echo Membuka widget melayang di desktop...
-start msedge --app="http://localhost:5173/?mode=widget" --window-size=920,240 --window-position=300,5
+start msedge --app="http://localhost:5173/?mode=widget" --window-size=920,240 --window-position=300,0
 echo Selesai! Widget kini melayang di bagian atas layar desktop.
 
