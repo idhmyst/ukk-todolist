@@ -7,7 +7,6 @@ import {
   Edit3,
   Loader2,
   AlertTriangle,
-  Flame,
 } from 'lucide-react';
 import { getDeadlineInfo, formatIndonesianDate } from '../utils/todoHelpers';
 
@@ -144,9 +143,9 @@ export default function TodoItem({
                     <span className="truncate">Terlewat ({Math.abs(deadlineInfo.diffDays)} hari) • {deadlineInfo.formattedDate}</span>
                   </span>
                 ) : deadlineInfo?.isToday ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-amber-100 text-amber-900 border border-amber-400 shadow-2xs animate-pulse ring-1 ring-amber-300 max-w-full">
-                    <Flame className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-                    <span className="truncate">Hari Ini! • {deadlineInfo.formattedDate}</span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-100 text-amber-900 border border-amber-400 shadow-2xs animate-pulse ring-1 ring-amber-300 max-w-full">
+                    <Clock className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                    <span className="truncate">Hari Ini • {deadlineInfo.formattedDate}</span>
                   </span>
                 ) : deadlineInfo?.isTomorrow ? (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-50 text-amber-800 border border-amber-300 max-w-full">

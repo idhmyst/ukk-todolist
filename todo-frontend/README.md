@@ -327,12 +327,12 @@ const handleToggleStatus = async (id, nextStatus) => {
 5. **Sistem Pengurutan Cerdas & Deteksi Urgensi Deadline (Smart Urgency Sorting)**:
    * **Hierarki Urgensi Otomatis**: Tugas dengan prioritas **High** yang memiliki deadline terdekat otomatis menempati urutan paling atas agar langsung ternotis pengguna (*"biar cepat ke-mention"*). Diikuti oleh prioritas **Medium** lalu **Low**.
    * **Indikator Status Deadline Visual**:
-     * ⚠️ **Terlewat (Overdue)**: Badge merah berkedip (*animate-pulse*) jika tanggal deadline telah lampau.
-     * 🔥 **Hari Ini!**: Badge oranye menyala jika deadline jatuh pada hari ini.
-     * ⚡ **Besok**: Badge amber untuk tugas yang harus selesai besok.
-     * ⏳ **X Hari Lagi**: Badge biru indigo untuk deadline mendekat (2-3 hari ke depan).
+     * **Terlewat (Overdue)**: Badge merah berkedip (*animate-pulse*) jika tanggal deadline telah lampau.
+     * **Hari Ini**: Badge oranye menyala jika deadline jatuh pada hari ini.
+     * **Besok**: Badge amber untuk tugas yang harus selesai besok.
+     * **X Hari Lagi**: Badge biru indigo untuk deadline mendekat (2-3 hari ke depan).
    * **Aksen Garis Kiri (Left Border Accent)**: Setiap kartu tugas memiliki garis warna vertikal di sisi kiri (`border-l-4`) sesuai level prioritas (Merah untuk High, Kuning untuk Medium, Hijau untuk Low).
-   * **Dropdown Pilihan Urutan**: Pengguna dapat memilih 4 mode pengurutan dinamis (*⚡ Urgensi & Deadline, 📅 Deadline Terdekat, 🔥 Prioritas Tertinggi, 🕒 Terbaru Dibuat*).
+   * **Dropdown Pilihan Urutan**: Pengguna dapat memilih 4 mode pengurutan dinamis (*Urgensi & Deadline, Deadline Terdekat, Prioritas Tertinggi, Terbaru Dibuat*).
 6. **100% Responsif di Semua Ukuran Layar**:
    * Di layar desktop: card membentang proporsional dan nyaman dibaca (`max-w-5xl`).
    * Di layar tablet/ponsel sempit: form dan tombol otomatis menata diri (*stacking* vertikal), serta tab filter otomatis membungkus diri (*flex-wrap*) tanpa ada konten yang terpotong ke kanan (*zero horizontal scrollbar*).

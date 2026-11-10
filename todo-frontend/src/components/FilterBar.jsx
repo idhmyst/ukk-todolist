@@ -100,10 +100,10 @@ export default function FilterBar({
               className="bg-transparent border-none text-xs font-bold text-indigo-900 focus:outline-none cursor-pointer pr-1"
               title="Pilih mode pengurutan tugas"
             >
-              <option value="urgency">⚡ Urgensi & Deadline (Rekomendasi)</option>
-              <option value="deadline">📅 Deadline Terdekat</option>
-              <option value="priority">🔥 Prioritas Tertinggi</option>
-              <option value="newest">🕒 Terbaru Dibuat</option>
+              <option value="urgency">Urgensi & Deadline (Default)</option>
+              <option value="deadline">Deadline Terdekat</option>
+              <option value="priority">Prioritas Tertinggi</option>
+              <option value="newest">Terbaru Dibuat</option>
             </select>
           </div>
 
@@ -111,7 +111,7 @@ export default function FilterBar({
           <div className="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 max-w-full truncate shadow-2xs">
             {pending === 0 && all > 0 ? (
               <span className="text-emerald-700 font-bold flex items-center gap-1">
-                ✨ Semua selesai!
+                Semua tugas selesai
               </span>
             ) : (
               <span>
