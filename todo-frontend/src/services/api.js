@@ -72,6 +72,24 @@ export const deleteTodo = async (id) => {
 };
 
 /**
+ * Membersihkan seluruh tugas yang sudah selesai
+ * DELETE http://localhost:8080/api/todos/completed (dengan fallback parallel delete)
+ */
+export const clearCompletedTodos = async (completedIds = []) => {
+  try {
+    const response = await apiClient.delete('/todos/completed');
+    return response.data;
+  } catch (error) {
+    // Fallback: hapus per-ID jika endpoint massal tidak didukung server
+    if (completedIds.length > 0) {
+      await Promise.all(completedIds.map((id) => apiClient.delete(`/todos/${id}`)));
+      return { message: 'Semua tugas selesai berhasil dibersihkan' };
+    }
+    throw handleApiError(error);
+  }
+};
+
+/**
  * Penanganan dan standardisasi pesan error
  */
 function handleApiError(error) {

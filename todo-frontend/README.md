@@ -245,6 +245,19 @@ Base URL Backend: **`http://localhost:8080/api`**
 
 ---
 
+### 5. `DELETE /api/todos/completed` — Bersihkan Semua Tugas Selesai
+* **Tujuan**: Menghapus massal seluruh baris tugas yang berstatus `is_completed = true` dari database (*bulk delete*).
+* **HTTP Status Code**: `200 OK`
+* **Response Body (JSON)**:
+```json
+{
+  "message": "Semua tugas yang telah selesai berhasil dibersihkan",
+  "deleted": 4
+}
+```
+
+---
+
 ## 6. Bedah Mendalam Frontend React Vite
 
 Struktur komponen di `todo-frontend/src/`:
@@ -333,7 +346,10 @@ const handleToggleStatus = async (id, nextStatus) => {
      * **X Hari Lagi**: Badge biru indigo untuk deadline mendekat (2-3 hari ke depan).
    * **Aksen Garis Kiri (Left Border Accent)**: Setiap kartu tugas memiliki garis warna vertikal di sisi kiri (`border-l-4`) sesuai level prioritas (Merah untuk High, Kuning untuk Medium, Hijau untuk Low).
    * **Dropdown Pilihan Urutan**: Pengguna dapat memilih 4 mode pengurutan dinamis (*Urgensi & Deadline, Deadline Terdekat, Prioritas Tertinggi, Terbaru Dibuat*).
-6. **100% Responsif di Semua Ukuran Layar**:
+6. **Accordion Lipat & Tombol Bersihkan Selesai (Clean Workspace)**:
+   * **Folder Lipat (Collapsible Accordion)**: Pada tab *Semua*, tugas yang sudah selesai otomatis masuk ke bawah tombol `▼ Tugas Selesai (X)` yang dapat dilipat/dibuka. Layar tetap bersih dan bebas distraksi dari tugas lama.
+   * **Bersihkan Selesai (Clear Completed)**: Tombol pembersih massal yang dilengkapi dialog konfirmasi interaktif untuk menghapus seluruh riwayat tugas selesai sekaligus dari database.
+7. **100% Responsif di Semua Ukuran Layar**:
    * Di layar desktop: card membentang proporsional dan nyaman dibaca (`max-w-5xl`).
    * Di layar tablet/ponsel sempit: form dan tombol otomatis menata diri (*stacking* vertikal), serta tab filter otomatis membungkus diri (*flex-wrap*) tanpa ada konten yang terpotong ke kanan (*zero horizontal scrollbar*).
 

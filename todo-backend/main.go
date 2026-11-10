@@ -48,6 +48,7 @@ func main() {
 		api.GET("/todos", controllers.GetTodos)
 		api.POST("/todos", controllers.CreateTodo)
 		api.PUT("/todos/:id", controllers.UpdateTodo)
+		api.DELETE("/todos/completed", controllers.ClearCompletedTodos)
 		api.DELETE("/todos/:id", controllers.DeleteTodo)
 	}
 

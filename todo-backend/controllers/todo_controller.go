@@ -162,3 +162,20 @@ func DeleteTodo(c *gin.Context) {
 		"message": "To-do berhasil dihapus",
 	})
 }
+
+// ClearCompletedTodos menghapus semua tugas yang telah berstatus selesai (is_completed = true)
+// DELETE /api/todos/completed
+func ClearCompletedTodos(c *gin.Context) {
+	result := config.DB.Where("is_completed = ?", true).Delete(&models.Todo{})
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Gagal membersihkan tugas selesai: " + result.Error.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Semua tugas yang telah selesai berhasil dibersihkan",
+		"deleted": result.RowsAffected,
+	})
+}
