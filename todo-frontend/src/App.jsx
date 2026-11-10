@@ -7,6 +7,7 @@ import EditModal from './components/EditModal';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import EmptyState from './components/EmptyState';
 import ErrorAlert from './components/ErrorAlert';
+import DesktopWidget from './components/DesktopWidget';
 import {
   getTodos,
   createTodo,
@@ -14,7 +15,11 @@ import {
   deleteTodo,
   clearCompletedTodos,
 } from './services/api';
-import { sortTodos } from './utils/todoHelpers';
+import {
+  sortTodos,
+  groupTodosByDate,
+  groupTodosByPriority,
+} from './utils/todoHelpers';
 import {
   CheckCircle2,
   AlertCircle,
@@ -203,6 +208,15 @@ export default function App() {
     return filteredTodos.filter((t) => t.is_completed);
   }, [filteredTodos]);
 
+  // Kelompokkan tugas aktif berdasarkan mode switch (Urgensi vs Deadline Per Hari)
+  const groupedSections = useMemo(() => {
+    const listToGroup = activeFilter === 'pending' ? filteredTodos : activeTodos;
+    if (sortBy === 'deadline') {
+      return groupTodosByDate(listToGroup);
+    }
+    return groupTodosByPriority(listToGroup);
+  }, [activeTodos, filteredTodos, activeFilter, sortBy]);
+
   return (
     <div className="min-h-screen w-full max-w-full bg-slate-100/70 p-2 sm:p-5 lg:p-8 flex flex-col items-center justify-start overflow-x-hidden">
       {/* Floating Toast Notification */}
@@ -265,17 +279,35 @@ export default function App() {
               <EmptyState filter={activeFilter} />
             ) : activeFilter === 'all' ? (
               <div className="space-y-3 flex-1 min-w-0 w-full max-w-full">
-                {/* Active Todos List */}
+                {/* Active Todos List (Grouped by Urgency or Deadline) */}
                 {activeTodos.length > 0 ? (
-                  <div className="space-y-2.5 sm:space-y-3">
-                    {activeTodos.map((todo) => (
-                      <TodoItem
-                        key={todo.id}
-                        todo={todo}
-                        onToggleStatus={handleToggleStatus}
-                        onEdit={(target) => setEditingTodo(target)}
-                        onDelete={handleDeleteTodo}
-                      />
+                  <div className="space-y-4">
+                    {groupedSections.map((section) => (
+                      <div key={section.id} className="space-y-2">
+                        {/* Section Header */}
+                        <div className="flex items-center gap-2 pt-1 pb-0.5 first:pt-0">
+                          <span className="text-xs font-black uppercase tracking-wider text-slate-700">
+                            {section.title}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${section.badgeClass}`}>
+                            {section.items.length}
+                          </span>
+                          <div className="flex-1 h-px bg-slate-200" />
+                        </div>
+
+                        {/* Section Items */}
+                        <div className="space-y-2.5 sm:space-y-3">
+                          {section.items.map((todo) => (
+                            <TodoItem
+                              key={todo.id}
+                              todo={todo}
+                              onToggleStatus={handleToggleStatus}
+                              onEdit={(target) => setEditingTodo(target)}
+                              onDelete={handleDeleteTodo}
+                            />
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 ) : (
@@ -368,15 +400,31 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-2.5 sm:space-y-3 flex-1 min-w-0 w-full max-w-full">
-                {filteredTodos.map((todo) => (
-                  <TodoItem
-                    key={todo.id}
-                    todo={todo}
-                    onToggleStatus={handleToggleStatus}
-                    onEdit={(target) => setEditingTodo(target)}
-                    onDelete={handleDeleteTodo}
-                  />
+              <div className="space-y-4 flex-1 min-w-0 w-full max-w-full">
+                {groupedSections.map((section) => (
+                  <div key={section.id} className="space-y-2">
+                    <div className="flex items-center gap-2 pt-1 pb-0.5 first:pt-0">
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-700">
+                        {section.title}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${section.badgeClass}`}>
+                        {section.items.length}
+                      </span>
+                      <div className="flex-1 h-px bg-slate-200" />
+                    </div>
+
+                    <div className="space-y-2.5 sm:space-y-3">
+                      {section.items.map((todo) => (
+                        <TodoItem
+                          key={todo.id}
+                          todo={todo}
+                          onToggleStatus={handleToggleStatus}
+                          onEdit={(target) => setEditingTodo(target)}
+                          onDelete={handleDeleteTodo}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}

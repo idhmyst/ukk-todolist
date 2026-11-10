@@ -1,5 +1,5 @@
 import React from 'react';
-import { ListFilter, CheckCheck, Clock, Search, ArrowUpDown } from 'lucide-react';
+import { ListFilter, CheckCheck, Clock, Search, ArrowUpDown, Calendar } from 'lucide-react';
 
 export default function FilterBar({
   activeFilter,
@@ -89,22 +89,32 @@ export default function FilterBar({
 
         {/* Right side: Sort Selector & Pending Counter */}
         <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-between lg:justify-end min-w-0">
-          {/* Smart Sort Selector */}
-          <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs min-w-0">
-            <ArrowUpDown className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0" />
-            <span className="hidden sm:inline text-slate-500 font-semibold text-[11px]">Urutkan:</span>
-            <select
-              id="sort-select"
-              value={sortBy}
-              onChange={(e) => onSortChange(e.target.value)}
-              className="bg-transparent border-none text-xs font-bold text-indigo-900 focus:outline-none cursor-pointer pr-1"
-              title="Pilih mode pengurutan tugas"
+          {/* 2-Way Switch: Urgensi vs Per Hari */}
+          <div className="inline-flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => onSortChange('urgency')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer ${
+                sortBy === 'urgency'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+              }`}
             >
-              <option value="urgency">Urgensi & Deadline (Default)</option>
-              <option value="deadline">Deadline Terdekat</option>
-              <option value="priority">Prioritas Tertinggi</option>
-              <option value="newest">Terbaru Dibuat</option>
-            </select>
+              <ArrowUpDown className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>Urgensi</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onSortChange('deadline')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer ${
+                sortBy === 'deadline'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>Per Hari (Deadline)</span>
+            </button>
           </div>
 
           {/* Counter Info */}

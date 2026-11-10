@@ -145,3 +145,129 @@ export function sortTodos(todos, sortBy = 'urgency') {
   });
 }
 
+/**
+ * Mengelompokkan tugas aktif berdasarkan waktu deadline (Per Hari / Timeline)
+ */
+export function groupTodosByDate(todos) {
+  const groups = {
+    overdue: [],
+    today: [],
+    tomorrow: [],
+    upcoming: [],
+    no_date: [],
+  };
+
+  todos.forEach((todo) => {
+    if (!todo.due_date) {
+      groups.no_date.push(todo);
+      return;
+    }
+    const info = getDeadlineInfo(todo.due_date);
+    if (!info) {
+      groups.no_date.push(todo);
+    } else if (info.isOverdue) {
+      groups.overdue.push(todo);
+    } else if (info.isToday) {
+      groups.today.push(todo);
+    } else if (info.isTomorrow) {
+      groups.tomorrow.push(todo);
+    } else {
+      groups.upcoming.push(todo);
+    }
+  });
+
+  const sections = [];
+  if (groups.overdue.length > 0) {
+    sections.push({
+      id: 'overdue',
+      title: 'Terlewat (Overdue)',
+      badgeClass: 'bg-rose-100 text-rose-800 border border-rose-300 font-bold',
+      items: groups.overdue,
+    });
+  }
+  if (groups.today.length > 0) {
+    sections.push({
+      id: 'today',
+      title: 'Hari Ini',
+      badgeClass: 'bg-amber-100 text-amber-900 border border-amber-300 font-bold',
+      items: groups.today,
+    });
+  }
+  if (groups.tomorrow.length > 0) {
+    sections.push({
+      id: 'tomorrow',
+      title: 'Besok',
+      badgeClass: 'bg-amber-50 text-amber-800 border border-amber-200 font-bold',
+      items: groups.tomorrow,
+    });
+  }
+  if (groups.upcoming.length > 0) {
+    sections.push({
+      id: 'upcoming',
+      title: 'Mendatang',
+      badgeClass: 'bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold',
+      items: groups.upcoming,
+    });
+  }
+  if (groups.no_date.length > 0) {
+    sections.push({
+      id: 'no_date',
+      title: 'Tanpa Tenggat Waktu',
+      badgeClass: 'bg-slate-100 text-slate-600 border border-slate-200 font-medium',
+      items: groups.no_date,
+    });
+  }
+
+  return sections;
+}
+
+/**
+ * Mengelompokkan tugas aktif berdasarkan level urgensi prioritas (High > Medium > Low)
+ */
+export function groupTodosByPriority(todos) {
+  const groups = {
+    high: [],
+    medium: [],
+    low: [],
+  };
+
+  todos.forEach((todo) => {
+    const p = (todo.priority || 'medium').toLowerCase();
+    if (p === 'high') {
+      groups.high.push(todo);
+    } else if (p === 'low') {
+      groups.low.push(todo);
+    } else {
+      groups.medium.push(todo);
+    }
+  });
+
+  const sections = [];
+  if (groups.high.length > 0) {
+    sections.push({
+      id: 'high',
+      title: 'Prioritas Mendesak (High)',
+      badgeClass: 'bg-rose-100 text-rose-800 border border-rose-300 font-bold',
+      items: groups.high,
+    });
+  }
+  if (groups.medium.length > 0) {
+    sections.push({
+      id: 'medium',
+      title: 'Prioritas Standar (Medium)',
+      badgeClass: 'bg-amber-100 text-amber-900 border border-amber-300 font-bold',
+      items: groups.medium,
+    });
+  }
+  if (groups.low.length > 0) {
+    sections.push({
+      id: 'low',
+      title: 'Prioritas Santai (Low)',
+      badgeClass: 'bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold',
+      items: groups.low,
+    });
+  }
+
+  return sections;
+}
+

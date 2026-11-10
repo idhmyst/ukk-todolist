@@ -345,7 +345,9 @@ const handleToggleStatus = async (id, nextStatus) => {
      * **Besok**: Badge amber untuk tugas yang harus selesai besok.
      * **X Hari Lagi**: Badge biru indigo untuk deadline mendekat (2-3 hari ke depan).
    * **Aksen Garis Kiri (Left Border Accent)**: Setiap kartu tugas memiliki garis warna vertikal di sisi kiri (`border-l-4`) sesuai level prioritas (Merah untuk High, Kuning untuk Medium, Hijau untuk Low).
-   * **Dropdown Pilihan Urutan**: Pengguna dapat memilih 4 mode pengurutan dinamis (*Urgensi & Deadline, Deadline Terdekat, Prioritas Tertinggi, Terbaru Dibuat*).
+   * **Switch Mode Tampilan (Segmented Toggle)**: Tombol switch 2 opsi praktis:
+     * **Urgensi**: Mengelompokkan tugas berdasarkan tingkat kepentingan (*High / Medium / Low*) dengan deadline terdekat di puncak tiap kelompok.
+     * **Per Hari (Deadline)**: Membagi daftar tugas ke dalam seksi timeline harian (*Terlewat, Hari Ini, Besok, Mendatang, Tanpa Tenggat Waktu*) dengan header seksi yang elegan.
 6. **Accordion Lipat & Tombol Bersihkan Selesai (Clean Workspace)**:
    * **Folder Lipat (Collapsible Accordion)**: Pada tab *Semua*, tugas yang sudah selesai otomatis masuk ke bawah tombol `▼ Tugas Selesai (X)` yang dapat dilipat/dibuka. Layar tetap bersih dan bebas distraksi dari tugas lama.
    * **Bersihkan Selesai (Clear Completed)**: Tombol pembersih massal yang dilengkapi dialog konfirmasi interaktif untuk menghapus seluruh riwayat tugas selesai sekaligus dari database.
