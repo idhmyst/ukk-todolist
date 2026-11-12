@@ -537,7 +537,6 @@ export default function App() {
               isRefreshing={isLoading}
               onRefresh={() => fetchTodosData(false)}
               onToggleWidgetMode={() => setIsWidgetMode(!isWidgetMode)}
-              onTestRingtone={handleTestRingtone}
               onToggleAi={() => setShowAiMobile((prev) => !prev)}
               showAiMobile={showAiMobile}
             />

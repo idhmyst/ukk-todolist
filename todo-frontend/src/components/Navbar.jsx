@@ -1,11 +1,10 @@
 import React from 'react';
-import { CheckCircle2, RefreshCw, LayoutTemplate, Bell, Sparkles } from 'lucide-react';
+import { CheckCircle2, RefreshCw, LayoutTemplate, Sparkles } from 'lucide-react';
 
 export default function Navbar({
   isRefreshing,
   onRefresh,
   onToggleWidgetMode,
-  onTestRingtone,
   onToggleAi,
   showAiMobile,
 }) {
@@ -36,18 +35,6 @@ export default function Navbar({
             <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
             <span className="hidden sm:inline">AI Assistant</span>
             <span className="sm:hidden">AI</span>
-          </button>
-
-          {/* Test Ringtone Button */}
-          <button
-            type="button"
-            onClick={onTestRingtone}
-            title="Tes bunyikan nada dering pengingat & aktifkan izin notifikasi"
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white active:bg-indigo-700 rounded-xl border border-indigo-200 hover:border-indigo-600 transition-all cursor-pointer shadow-xs group"
-          >
-            <Bell className="w-4 h-4 text-indigo-600 group-hover:text-white transition-colors" />
-            <span className="hidden sm:inline">Tes Nada Dering</span>
-            <span className="sm:hidden">Tes Suara</span>
           </button>
 
           {/* Widget Desktop Button */}
