@@ -210,6 +210,32 @@ export default function App() {
     return () => clearInterval(timer);
   }, [activeAlertTodo]);
 
+  // Handler: Toggle Status Selesai (PUT /api/todos/:id)
+  const handleToggleStatus = useCallback(
+    async (id, nextStatus) => {
+      let previousTodos = [];
+      setTodos((prev) => {
+        previousTodos = prev;
+        return prev.map((t) => (t.id === id ? { ...t, is_completed: nextStatus } : t));
+      });
+
+      try {
+        const updated = await updateTodo(id, { is_completed: nextStatus });
+        setTodos((prev) => prev.map((t) => (t.id === id ? updated : t)));
+        showToast(
+          nextStatus ? 'Tugas ditandai selesai!' : 'Tugas dikembalikan ke pending',
+          'success'
+        );
+      } catch (err) {
+        if (previousTodos.length > 0) {
+          setTodos(previousTodos);
+        }
+        showToast(err.message || 'Gagal mengubah status tugas', 'error');
+      }
+    },
+    [showToast]
+  );
+
   // Hentikan nada dan tutup notifikasi melayang
   const handleDismissAlert = useCallback(() => {
     stopDeadlineRingtoneLoop();
@@ -240,26 +266,6 @@ export default function App() {
       return false;
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  // Handler: Toggle Status Selesai (PUT /api/todos/:id)
-  const handleToggleStatus = async (id, nextStatus) => {
-    const previousTodos = [...todos];
-    setTodos((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, is_completed: nextStatus } : t))
-    );
-
-    try {
-      const updated = await updateTodo(id, { is_completed: nextStatus });
-      setTodos((prev) => prev.map((t) => (t.id === id ? updated : t)));
-      showToast(
-        nextStatus ? 'Tugas ditandai selesai!' : 'Tugas dikembalikan ke pending',
-        'success'
-      );
-    } catch (err) {
-      setTodos(previousTodos);
-      showToast(err.message || 'Gagal mengubah status tugas', 'error');
     }
   };
 
