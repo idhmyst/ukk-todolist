@@ -24,6 +24,22 @@ export function setGeminiApiKey(key) {
 }
 
 /**
+ * Membersihkan simbol markdown yang mengganggu (seperti **, *, _, #, dll)
+ * agar teks balasan selalu bersih, rapi, dan nyaman dibaca.
+ */
+export function stripMarkdownSymbols(text) {
+  if (typeof text !== 'string') return '';
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/__(.*?)__/g, '$1')
+    .replace(/_(.*?)_/g, '$1')
+    .replace(/^#+\s*/gm, '')
+    .replace(/`{1,3}(.*?)`{1,3}/g, '$1')
+    .trim();
+}
+
+/**
  * Format tanggal dan waktu lokal saat ini dalam bahasa Indonesia
  */
 function getCurrentDateTimeContext() {
@@ -111,9 +127,9 @@ ATURAN EKSTRAKSI TUGAS (action: "create_todos"):
     - Nilai TIDAK BOLEH berada di masa lalu (sebelum ${dt.isoDateTime}).
   * "reminder": Salah satu dari "1h" | "30m" | "5m" | "none". Default ke "30m" jika ada due_date, atau "none" jika tidak ditentukan.
 
-FORMAT OUTPUT WAJIB (JSON murni tanpa markdown \`\`\`json):
+FORMAT OUTPUT WAJIB (JSON murni tanpa tanda petik kode):
 {
-  "reply": "Pesan ramah dalam bahasa Indonesia yang menjelaskan apa yang telah disiapkan atau jawaban atas pertanyaan",
+  "reply": "Pesan balasan sangat singkat (cukup 1 kalimat pendek, to the point, dilarang menggunakan markdown seperti **bold**, *italic*, ### heading, bullet, atau kata-kata alay)",
   "action": "create_todos" atau "chat",
   "todos": [
     {
@@ -124,6 +140,15 @@ FORMAT OUTPUT WAJIB (JSON murni tanpa markdown \`\`\`json):
     }
   ]
 }
+
+ATURAN BALASAN ("reply"):
+- Balas dengan SANGAT SINGKAT, PADAT, dan LANGSUNG PADA INTI (cukup 1 kalimat pendek, maksimal 2 kalimat).
+- DILARANG menggunakan karakter format seperti asterik ganda (**), garis bawah (_), pagar (#), atau tanda kutip yang tidak perlu.
+- JANGAN bertele-tele dan JANGAN menggunakan gaya bahasa alay.
+- Contoh balasan yang baik:
+  * "Tugas sudah saya siapkan, silakan klik Tambah."
+  * "Ada 2 tugas aktif hari ini, yang paling mendesak adalah [Judul]."
+  * "Halo! Mau catat tugas apa hari ini?"
 
 Jika pengguna hanya mengobrol, menyapa, atau bertanya tanpa ada instruksi membuat tugas, isi "action": "chat" dan "todos": [].`;
 
@@ -138,7 +163,7 @@ Jika pengguna hanya mengobrol, menyapa, atau bertanya tanpa ada instruksi membua
       parts: [
         {
           text: JSON.stringify({
-            reply: 'Siap! Saya Kelarin AI, siap membantumu mengelola dan menjadwalkan tugas dengan cepat.',
+            reply: 'Siap! Saya Kelarin AI. Mau catat atau cek tugas apa?',
             action: 'chat',
             todos: [],
           }),
@@ -223,14 +248,14 @@ Jika pengguna hanya mengobrol, menyapa, atau bertanya tanpa ada instruksi membua
     const cleaned = rawText.trim().replace(/^```json\s*/i, '').replace(/\s*```$/i, '');
     const parsed = JSON.parse(cleaned);
     return {
-      reply: parsed.reply || 'Tugas telah diproses.',
+      reply: stripMarkdownSymbols(parsed.reply) || 'Tugas telah disiapkan.',
       action: parsed.action || (parsed.todos?.length > 0 ? 'create_todos' : 'chat'),
       todos: Array.isArray(parsed.todos) ? parsed.todos : [],
     };
   } catch (parseErr) {
     console.error('Gagal mem-parse respons JSON dari Gemini:', rawText, parseErr);
     return {
-      reply: rawText,
+      reply: stripMarkdownSymbols(rawText) || 'Perintah berhasil diproses.',
       action: 'chat',
       todos: [],
     };

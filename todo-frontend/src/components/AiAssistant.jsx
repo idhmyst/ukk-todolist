@@ -1,19 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { sendAiCommand, getGeminiApiKey, setGeminiApiKey } from '../services/aiService';
+import {
+  sendAiCommand,
+  getGeminiApiKey,
+  setGeminiApiKey,
+  stripMarkdownSymbols,
+} from '../services/aiService';
 import {
   Sparkles,
   Send,
   Loader2,
-  Check,
   Plus,
   Clock,
   Bell,
   Trash2,
   Bot,
   User,
-  AlertCircle,
-  HelpCircle,
-  ArrowRight,
   CheckCircle2,
   Key,
   X,
@@ -21,10 +22,22 @@ import {
 } from 'lucide-react';
 
 const SUGGESTIONS = [
-  'Besok jam 09:00 ingatkan bikin laporan, prioritas high, notif 30 menit',
-  'Tolong tambahkan tugas beli keperluan kelompok nanti sore jam 17:00',
-  'Apa tugas saya yang paling mendesak saat ini?',
-  'Jadwalkan belajar matematika lusa jam 14:00',
+  {
+    label: '+ Laporan besok 09:00',
+    text: 'Besok jam 09:00 ingatkan bikin laporan, prioritas high, notif 30 menit',
+  },
+  {
+    label: '+ Cuci motor sore 17:00',
+    text: 'Tolong tambahkan tugas cuci motor nanti sore jam 17:00',
+  },
+  {
+    label: '⚡ Tugas paling mendesak?',
+    text: 'Apa tugas saya yang paling mendesak saat ini?',
+  },
+  {
+    label: '📅 Cek jadwal lusa',
+    text: 'Ada jadwal tugas apa untuk lusa?',
+  },
 ];
 
 export default function AiAssistant({
@@ -38,7 +51,7 @@ export default function AiAssistant({
     {
       id: 'welcome',
       role: 'model',
-      text: 'Halo! Saya **Kelarin AI** (didukung Google Gemini 2.5 Flash). Kamu bisa memberi saya perintah dalam bahasa santai untuk menambahkan tugas atau menjadwalkan deadline secara otomatis.',
+      text: 'Halo! Mau catat atau cek tugas apa hari ini?',
       todos: [],
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
     },
@@ -94,23 +107,20 @@ export default function AiAssistant({
       const aiMessage = {
         id: `ai_${Date.now()}`,
         role: 'model',
-        text: result.reply,
+        text: stripMarkdownSymbols(result.reply),
         action: result.action,
         todos: result.todos || [],
         timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       };
 
       setMessages((prev) => [...prev, aiMessage]);
-
-      // Jika pengguna meminta menambahkan tugas, tawarkan atau otomatis tambahkan
-      // Di sini kita sediakan tombol 1-klik untuk konfirmasi langsung di kartu
     } catch (err) {
       console.error('Error sendAiCommand:', err);
       const errorMessage = {
         id: `err_${Date.now()}`,
         role: 'model',
         isError: true,
-        text: `Maaf, terjadi kendala saat memproses perintah: ${err.message || 'Coba periksa koneksi atau API Key.'}`,
+        text: `Terjadi kendala: ${err.message || 'Coba periksa koneksi atau API Key.'}`,
         timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -163,7 +173,7 @@ export default function AiAssistant({
       {
         id: 'welcome',
         role: 'model',
-        text: 'Riwayat percakapan telah dibersihkan. Silakan beri perintah baru!',
+        text: 'Obrolan dibersihkan. Mau catat tugas apa?',
         todos: [],
         timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       },
@@ -172,25 +182,25 @@ export default function AiAssistant({
   };
 
   return (
-    <div className="flex flex-col h-[650px] sm:h-[720px] bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden">
-      {/* Header AI Assistant */}
-      <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex-shrink-0">
+    <div className="flex flex-col h-[620px] sm:h-[700px] bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-200/90 overflow-hidden transition-all">
+      {/* Header AI Assistant (Sleek Modern Deep Slate) */}
+      <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 bg-slate-900 border-b border-slate-800 text-white flex-shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-amber-300 shadow-sm flex-shrink-0">
-            <Sparkles className="w-5 h-5 animate-pulse text-amber-300" />
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-xs flex-shrink-0">
+            <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <h3 className="text-sm font-bold tracking-tight text-white">
-                Kelarin AI Assistant
+                Kelarin AI
               </h3>
-              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
-                Gemini 2.5 Flash
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-700/60">
+                v2.5 Flash
               </span>
             </div>
-            <p className="text-[11px] text-slate-300 flex items-center gap-1 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
-              <span>Online • Tambah tugas via teks bebas</span>
+            <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+              <span>Online • Asisten Jadwal & Tugas</span>
             </p>
           </div>
         </div>
@@ -199,7 +209,7 @@ export default function AiAssistant({
           <button
             type="button"
             onClick={() => setShowKeyModal(true)}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
             title="Pengaturan Google Gemini API Key"
           >
             <Key className="w-4 h-4" />
@@ -207,17 +217,27 @@ export default function AiAssistant({
           <button
             type="button"
             onClick={handleClearChat}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
             title="Bersihkan riwayat percakapan"
           >
             <Trash2 className="w-4 h-4" />
           </button>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer lg:hidden"
+              title="Tutup asisten"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Suggestion Chips */}
-      <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-shrink-0">
-        <span className="text-[11px] font-bold text-indigo-700 flex items-center gap-1 flex-shrink-0">
+      {/* Suggestion Chips (Prompt Cepat Rapi & Compact) */}
+      <div className="px-3.5 py-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-shrink-0">
+        <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1 flex-shrink-0 mr-0.5">
           <Sparkles className="w-3 h-3 text-indigo-500" />
           Coba:
         </span>
@@ -225,19 +245,20 @@ export default function AiAssistant({
           <button
             key={idx}
             type="button"
-            onClick={() => handleSendMessage(s)}
-            className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-white text-slate-600 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 transition-colors whitespace-nowrap cursor-pointer flex-shrink-0 shadow-2xs"
+            onClick={() => handleSendMessage(s.text)}
+            className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-600 border border-slate-200 hover:border-indigo-200 transition-all whitespace-nowrap cursor-pointer flex-shrink-0 shadow-2xs"
           >
-            {s}
+            {s.label}
           </button>
         ))}
       </div>
 
       {/* Chat Thread Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/40">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/40">
         {messages.map((msg) => {
           const isModel = msg.role === 'model';
           const hasTodos = Array.isArray(msg.todos) && msg.todos.length > 0;
+          const cleanText = stripMarkdownSymbols(msg.text);
 
           return (
             <div
@@ -247,59 +268,64 @@ export default function AiAssistant({
               }`}
             >
               {isModel && (
-                <div className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 text-xs shadow-xs">
+                <div className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
                   <Bot className="w-4 h-4" />
                 </div>
               )}
 
               <div
-                className={`max-w-[85%] rounded-2xl p-3.5 text-xs sm:text-sm leading-relaxed ${
+                className={`max-w-[85%] rounded-2xl p-3 sm:p-3.5 text-xs sm:text-sm leading-relaxed ${
                   isModel
                     ? msg.isError
-                      ? 'bg-rose-50 border border-rose-200 text-rose-800'
-                      : 'bg-white border border-slate-200/80 text-slate-800 shadow-2xs'
-                    : 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-600/20'
+                      ? 'bg-rose-50 border border-rose-200 text-rose-800 rounded-tl-xs'
+                      : 'bg-white border border-slate-200/80 text-slate-800 shadow-2xs rounded-tl-xs'
+                    : 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20 font-medium rounded-tr-xs'
                 }`}
               >
-                {/* Text Message */}
-                <p className="whitespace-pre-wrap">{msg.text}</p>
+                {/* Text Message (Bersih tanpa mark simbol alay) */}
+                <p className="whitespace-pre-wrap">{cleanText}</p>
 
                 {/* AI Extracted Todo Cards */}
                 {hasTodos && (
                   <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-indigo-900">
-                      <span>Tugas yang Disiapkan AI ({msg.todos.length}):</span>
+                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
+                      <span>Tugas yang disiapkan ({msg.todos.length}):</span>
                       {msg.todos.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleAddAllAiTodos(msg.todos, msg.id)}
-                          className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+                          className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
                         >
-                          + Tambahkan Semua
+                          + Tambah Semua
                         </button>
                       )}
                     </div>
 
                     {msg.todos.map((todoItem, idx) => {
                       const isAdded = addedTodoIds.has(`${msg.id}_${idx}`);
-                      const isHigh = (todoItem.priority || '').toLowerCase() === 'high';
-                      const isMedium = (todoItem.priority || '').toLowerCase() === 'medium';
+                      const prio = (todoItem.priority || 'medium').toLowerCase();
+                      const isHigh = prio === 'high';
+                      const isMedium = prio === 'medium';
 
                       return (
                         <div
                           key={idx}
                           className={`p-2.5 rounded-xl border transition-all text-xs ${
                             isAdded
-                              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                              : 'bg-slate-50 border-slate-200/80 text-slate-800'
+                              ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+                              : isHigh
+                              ? 'bg-white border-slate-200 border-l-4 border-l-rose-500 shadow-2xs'
+                              : isMedium
+                              ? 'bg-white border-slate-200 border-l-4 border-l-amber-500 shadow-2xs'
+                              : 'bg-white border-slate-200 border-l-4 border-l-emerald-500 shadow-2xs'
                           }`}
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <span className="font-semibold text-slate-900 break-words flex-1">
+                            <span className="font-bold text-slate-900 break-words flex-1">
                               {todoItem.title}
                             </span>
                             <span
-                              className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
                                 isHigh
                                   ? 'bg-rose-100 text-rose-700'
                                   : isMedium
@@ -307,19 +333,19 @@ export default function AiAssistant({
                                   : 'bg-emerald-100 text-emerald-700'
                               }`}
                             >
-                              {todoItem.priority || 'medium'}
+                              {prio === 'high' ? 'High' : prio === 'low' ? 'Low' : 'Medium'}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-500 mt-1.5">
                             {todoItem.due_date && (
-                              <span className="flex items-center gap-1 font-medium text-slate-600">
-                                <Clock className="w-3 h-3 text-slate-400" />
+                              <span className="flex items-center gap-1 font-semibold text-slate-700">
+                                <Clock className="w-3 h-3 text-indigo-500" />
                                 {todoItem.due_date.replace('T', ' ')}
                               </span>
                             )}
                             {todoItem.reminder && todoItem.reminder !== 'none' && (
-                              <span className="flex items-center gap-0.5 text-indigo-600 font-medium">
+                              <span className="flex items-center gap-0.5 text-indigo-600 font-semibold">
                                 <Bell className="w-3 h-3" />
                                 {todoItem.reminder}
                               </span>
@@ -328,7 +354,7 @@ export default function AiAssistant({
 
                           <div className="mt-2 flex justify-end">
                             {isAdded ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-md">
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                 Ditambahkan
                               </span>
@@ -336,7 +362,7 @@ export default function AiAssistant({
                               <button
                                 type="button"
                                 onClick={() => handleAddAiTodo(todoItem, msg.id, idx)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-xs transition-colors cursor-pointer"
+                                className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-xs transition-colors cursor-pointer"
                               >
                                 <Plus className="w-3 h-3 stroke-[3]" />
                                 <span>Tambah ke Daftar</span>
@@ -350,7 +376,7 @@ export default function AiAssistant({
                 )}
 
                 <div
-                  className={`text-[9px] text-right mt-1.5 ${
+                  className={`text-[9px] text-right mt-1.5 font-medium ${
                     isModel ? 'text-slate-400' : 'text-indigo-200'
                   }`}
                 >
@@ -359,7 +385,7 @@ export default function AiAssistant({
               </div>
 
               {!isModel && (
-                <div className="w-7 h-7 rounded-xl bg-slate-800 text-white flex items-center justify-center flex-shrink-0 mt-0.5 text-xs shadow-xs">
+                <div className="w-7 h-7 rounded-xl bg-slate-800 text-white flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
                   <User className="w-4 h-4" />
                 </div>
               )}
@@ -370,12 +396,12 @@ export default function AiAssistant({
         {/* Loading Indicator */}
         {isLoading && (
           <div className="flex items-start gap-2.5">
-            <div className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 text-xs shadow-xs animate-pulse">
+            <div className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-2xs animate-pulse">
               <Bot className="w-4 h-4" />
             </div>
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-3 text-xs text-slate-600 flex items-center gap-2 shadow-2xs">
-              <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
-              <span>Kelarin AI sedang memproses perintahmu...</span>
+            <div className="bg-white border border-slate-200/80 rounded-2xl rounded-tl-xs p-3 text-xs text-slate-600 flex items-center gap-2 shadow-2xs">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
+              <span>Memproses perintah...</span>
             </div>
           </div>
         )}
@@ -390,32 +416,32 @@ export default function AiAssistant({
             e.preventDefault();
             handleSendMessage();
           }}
-          className="relative flex items-center gap-2"
+          className="relative flex items-center bg-slate-50 hover:bg-slate-100/70 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-100 focus-within:border-indigo-600 border border-slate-200 rounded-2xl p-1 transition-all"
         >
           <input
             type="text"
             value={inputPrompt}
             onChange={(e) => setInputPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ketik perintah (contoh: Besok jam 9 pagi ingatkan bikin tugas)..."
+            placeholder="Ketik perintah (contoh: Besok jam 9 pagi buat laporan)..."
             disabled={isLoading}
-            className="w-full px-4 py-2.5 text-xs sm:text-sm rounded-2xl border border-slate-200 bg-slate-50/70 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800 placeholder:text-slate-400 disabled:opacity-60 pr-10"
+            className="w-full px-3 py-1.5 text-xs sm:text-sm bg-transparent outline-none text-slate-800 placeholder-slate-400 disabled:opacity-60 pr-10"
           />
           <button
             type="submit"
             disabled={!inputPrompt.trim() || isLoading}
-            className="absolute right-1.5 p-2 rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-all cursor-pointer shadow-sm"
+            className="w-8 h-8 rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-all cursor-pointer flex items-center justify-center shadow-xs flex-shrink-0"
             title="Kirim perintah ke AI"
           >
             {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
-              <Send className="w-4 h-4" />
+              <Send className="w-3.5 h-3.5" />
             )}
           </button>
         </form>
         <p className="text-[10px] text-center text-slate-400 mt-1.5">
-          Tekan <kbd className="font-mono bg-slate-100 px-1 py-0.5 rounded border border-slate-200">Enter</kbd> untuk mengirim. Didukung Google Gemini AI.
+          Tekan <kbd className="font-mono bg-slate-100 px-1 py-0.5 rounded border border-slate-200 text-slate-500">Enter</kbd> untuk mengirim
         </p>
       </div>
 
@@ -452,7 +478,7 @@ export default function AiAssistant({
                   className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">
-                  Tersimpan secara aman di browser lokal Anda (Local Storage / .env).
+                  Tersimpan secara aman di browser lokal Anda.
                 </p>
               </div>
 
@@ -482,7 +508,7 @@ export default function AiAssistant({
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all"
+                    className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all cursor-pointer"
                   >
                     Simpan
                   </button>
