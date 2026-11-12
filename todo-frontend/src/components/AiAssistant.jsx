@@ -11,7 +11,7 @@ import {
   Bot,
   User,
   CheckCircle2,
-  Minus,
+  Minimize2,
   X,
 } from 'lucide-react';
 
@@ -191,9 +191,9 @@ export default function AiAssistant({
               type="button"
               onClick={onMinimize}
               className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Minimize Kelarin AI"
+              title="Minimize ke tombol melayang"
             >
-              <Minus className="w-4 h-4" />
+              <Minimize2 className="w-4 h-4" />
             </button>
           )}
 

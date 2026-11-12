@@ -819,24 +819,30 @@ export default function App() {
   </div>
 </div>
 
-      {/* Floating Launcher saat Kelarin AI di-minimize */}
+      {/* Floating Launcher saat Kelarin AI di-minimize (Ultra-Sleek Glassmorphic Pill) */}
       {isAiMinimized && (
-        <div className="fixed bottom-6 right-6 z-40 animate-in fade-in slide-in-from-bottom-3 duration-200">
+        <div className="fixed bottom-6 right-6 z-40 animate-in fade-in zoom-in-95 duration-200">
           <button
             type="button"
             onClick={() => setIsAiMinimized(false)}
-            className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900 text-white shadow-xl shadow-slate-950/25 border border-slate-700/80 hover:bg-slate-800 active:scale-95 transition-all cursor-pointer group"
+            className="group flex items-center gap-2.5 pl-2 pr-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-900 backdrop-blur-xl text-white shadow-xl shadow-indigo-950/25 border border-white/10 hover:border-indigo-400/50 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer ring-1 ring-black/5"
             title="Buka kembali Kelarin AI Assistant"
           >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-xs">
-              <Sparkles className="w-4 h-4 text-white" />
+            {/* Luminous Gradient Avatar */}
+            <div className="relative w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white shadow-sm shadow-indigo-500/40 flex-shrink-0 group-hover:scale-105 transition-transform">
+              <Sparkles className="w-3.5 h-3.5 text-white" />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-slate-900" />
             </div>
-            <div className="text-left">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-white">Kelarin AI</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-              </div>
-              <span className="text-[10px] text-slate-400 font-medium">Buka Asisten ↗</span>
+
+            {/* Label & Status */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-white tracking-tight">
+                Kelarin AI
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center gap-1 group-hover:bg-indigo-500/30 transition-colors">
+                <span>Buka</span>
+                <span className="text-[9px]">↗</span>
+              </span>
             </div>
           </button>
         </div>
