@@ -544,8 +544,6 @@ export default function App() {
               onToggleWidgetMode={() => setIsWidgetMode(!isWidgetMode)}
               onToggleAi={() => setShowAiMobile((prev) => !prev)}
               showAiMobile={showAiMobile}
-              isAiMinimized={isAiMinimized}
-              onRestoreAi={() => setIsAiMinimized(false)}
             />
 
             {/* View Switcher: Daftar Tugas vs Kalender & Jadwal */}
