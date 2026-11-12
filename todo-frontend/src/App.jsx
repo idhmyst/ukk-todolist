@@ -59,6 +59,7 @@ export default function App() {
   const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
   const [prefillDate, setPrefillDate] = useState('');
   const [showAiMobile, setShowAiMobile] = useState(false);
+  const [isAiMinimized, setIsAiMinimized] = useState(false);
 
   // Filters, Search & Smart Urgency Sorting
   const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'pending' | 'completed'
@@ -531,7 +532,11 @@ export default function App() {
       <div className="w-full max-w-7xl flex-1 flex flex-col min-w-0">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
           {/* SIDE 1: Main Application Side (Tasks & Calendar) */}
-          <div className="lg:col-span-7 xl:col-span-8 w-full min-w-0 bg-white rounded-2xl sm:rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-200/90 p-3 sm:p-6 lg:p-8 flex flex-col transition-all overflow-hidden">
+          <div
+            className={`${
+              isAiMinimized ? 'lg:col-span-12' : 'lg:col-span-7 xl:col-span-8'
+            } w-full min-w-0 bg-white rounded-2xl sm:rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-200/90 p-3 sm:p-6 lg:p-8 flex flex-col transition-all overflow-hidden`}
+          >
             {/* Header & Navbar */}
             <Navbar
               isRefreshing={isLoading}
@@ -539,6 +544,8 @@ export default function App() {
               onToggleWidgetMode={() => setIsWidgetMode(!isWidgetMode)}
               onToggleAi={() => setShowAiMobile((prev) => !prev)}
               showAiMobile={showAiMobile}
+              isAiMinimized={isAiMinimized}
+              onRestoreAi={() => setIsAiMinimized(false)}
             />
 
             {/* View Switcher: Daftar Tugas vs Kalender & Jadwal */}
@@ -789,22 +796,51 @@ export default function App() {
       )}
     </div>
 
-    {/* SIDE 2: Kelarin AI Assistant (2-Side Layout: Sticky on Desktop, Collapsible on Mobile) */}
-    <div
-      className={`lg:col-span-5 xl:col-span-4 w-full ${
-        showAiMobile ? 'block' : 'hidden lg:block'
-      } lg:sticky lg:top-6 transition-all`}
-    >
-      <AiAssistant
-        currentTodos={todos}
-        onAddTodo={handleAddTodo}
-        onOpenCalendar={() => setViewMode('calendar')}
-        isOpen={true}
-        onClose={() => setShowAiMobile(false)}
-      />
-    </div>
+    {/* SIDE 2: Kelarin AI Assistant (2-Side Layout: Sticky on Desktop, Collapsible on Mobile, Minimizable) */}
+    {!isAiMinimized && (
+      <div
+        className={`lg:col-span-5 xl:col-span-4 w-full ${
+          showAiMobile ? 'block' : 'hidden lg:block'
+        } lg:sticky lg:top-6 transition-all`}
+      >
+        <AiAssistant
+          currentTodos={todos}
+          onAddTodo={handleAddTodo}
+          onOpenCalendar={() => setViewMode('calendar')}
+          isOpen={true}
+          onClose={() => setShowAiMobile(false)}
+          onMinimize={() => {
+            setIsAiMinimized(true);
+            setShowAiMobile(false);
+          }}
+        />
+      </div>
+    )}
   </div>
 </div>
+
+      {/* Floating Launcher saat Kelarin AI di-minimize */}
+      {isAiMinimized && (
+        <div className="fixed bottom-6 right-6 z-40 animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <button
+            type="button"
+            onClick={() => setIsAiMinimized(false)}
+            className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900 text-white shadow-xl shadow-slate-950/25 border border-slate-700/80 hover:bg-slate-800 active:scale-95 transition-all cursor-pointer group"
+            title="Buka kembali Kelarin AI Assistant"
+          >
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-xs">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <div className="text-left">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-white">Kelarin AI</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium">Buka Asisten ↗</span>
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Modal Konfirmasi Bersihkan Semua Selesai */}
       {showClearCompletedModal && (

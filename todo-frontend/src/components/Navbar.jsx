@@ -7,6 +7,8 @@ export default function Navbar({
   onToggleWidgetMode,
   onToggleAi,
   showAiMobile,
+  isAiMinimized,
+  onRestoreAi,
 }) {
   return (
     <header className="mb-6 pb-5 border-b border-slate-100">
@@ -25,6 +27,19 @@ export default function Navbar({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
+          {/* Re-open AI Button if Minimized (Desktop) */}
+          {isAiMinimized && (
+            <button
+              type="button"
+              onClick={onRestoreAi}
+              title="Buka kembali Kelarin AI Assistant"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-xl border border-slate-700/80 shadow-xs transition-all cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>Buka AI</span>
+            </button>
+          )}
+
           {/* Mobile AI Toggle Button */}
           <button
             type="button"

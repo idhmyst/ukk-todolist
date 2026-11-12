@@ -1,10 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  sendAiCommand,
-  getGeminiApiKey,
-  setGeminiApiKey,
-  stripMarkdownSymbols,
-} from '../services/aiService';
+import { sendAiCommand, stripMarkdownSymbols } from '../services/aiService';
 import {
   Sparkles,
   Send,
@@ -16,9 +11,8 @@ import {
   Bot,
   User,
   CheckCircle2,
-  Key,
+  Minus,
   X,
-  ExternalLink,
 } from 'lucide-react';
 
 const SUGGESTIONS = [
@@ -46,6 +40,7 @@ export default function AiAssistant({
   onOpenCalendar,
   isOpen = true,
   onClose,
+  onMinimize,
 }) {
   const [messages, setMessages] = useState([
     {
@@ -59,23 +54,7 @@ export default function AiAssistant({
   const [inputPrompt, setInputPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [addedTodoIds, setAddedTodoIds] = useState(new Set());
-  const [showKeyModal, setShowKeyModal] = useState(false);
-  const [keyInput, setKeyInput] = useState('');
-  const [hasCustomKey, setHasCustomKey] = useState(false);
   const messagesEndRef = useRef(null);
-
-  useEffect(() => {
-    const existing = getGeminiApiKey();
-    setHasCustomKey(Boolean(existing));
-    if (existing) setKeyInput(existing);
-  }, []);
-
-  const handleSaveKey = (e) => {
-    e.preventDefault();
-    setGeminiApiKey(keyInput.trim());
-    setHasCustomKey(Boolean(keyInput.trim()));
-    setShowKeyModal(false);
-  };
 
   // Auto scroll to bottom of chat
   useEffect(() => {
@@ -120,7 +99,7 @@ export default function AiAssistant({
         id: `err_${Date.now()}`,
         role: 'model',
         isError: true,
-        text: `Terjadi kendala: ${err.message || 'Coba periksa koneksi atau API Key.'}`,
+        text: `Terjadi kendala: ${err.message || 'Coba periksa koneksi internet.'}`,
         timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -183,7 +162,7 @@ export default function AiAssistant({
 
   return (
     <div className="flex flex-col h-[620px] sm:h-[700px] bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-200/90 overflow-hidden transition-all">
-      {/* Header AI Assistant (Sleek Modern Deep Slate) */}
+      {/* Header AI Assistant */}
       <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 bg-slate-900 border-b border-slate-800 text-white flex-shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-xs flex-shrink-0">
@@ -206,14 +185,19 @@ export default function AiAssistant({
         </div>
 
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setShowKeyModal(true)}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Pengaturan Google Gemini API Key"
-          >
-            <Key className="w-4 h-4" />
-          </button>
+          {/* Tombol Minimize AI */}
+          {onMinimize && (
+            <button
+              type="button"
+              onClick={onMinimize}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Minimize Kelarin AI"
+            >
+              <Minus className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* Tombol Bersihkan Chat */}
           <button
             type="button"
             onClick={handleClearChat}
@@ -222,6 +206,8 @@ export default function AiAssistant({
           >
             <Trash2 className="w-4 h-4" />
           </button>
+
+          {/* Tombol Close di Mobile */}
           {onClose && (
             <button
               type="button"
@@ -235,7 +221,7 @@ export default function AiAssistant({
         </div>
       </div>
 
-      {/* Suggestion Chips (Prompt Cepat Rapi & Compact) */}
+      {/* Suggestion Chips */}
       <div className="px-3.5 py-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-shrink-0">
         <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1 flex-shrink-0 mr-0.5">
           <Sparkles className="w-3 h-3 text-indigo-500" />
@@ -282,7 +268,7 @@ export default function AiAssistant({
                     : 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20 font-medium rounded-tr-xs'
                 }`}
               >
-                {/* Text Message (Bersih tanpa mark simbol alay) */}
+                {/* Text Message */}
                 <p className="whitespace-pre-wrap">{cleanText}</p>
 
                 {/* AI Extracted Todo Cards */}
@@ -444,80 +430,6 @@ export default function AiAssistant({
           Tekan <kbd className="font-mono bg-slate-100 px-1 py-0.5 rounded border border-slate-200 text-slate-500">Enter</kbd> untuk mengirim
         </p>
       </div>
-
-      {/* Modal Pengaturan Google Gemini API Key */}
-      {showKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-          <div className="relative bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
-                  <Key className="w-4 h-4" />
-                </div>
-                <h4 className="text-sm font-bold text-slate-900">Google Gemini API Key</h4>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowKeyModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveKey} className="mt-4 space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  API Key Anda:
-                </label>
-                <input
-                  type="password"
-                  value={keyInput}
-                  onChange={(e) => setKeyInput(e.target.value)}
-                  placeholder="Masukkan Google API Key..."
-                  className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                />
-                <p className="text-[10px] text-slate-400 mt-1">
-                  Tersimpan secara aman di browser lokal Anda.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between pt-2">
-                <a
-                  href="https://aistudio.google.com/app/apikey"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 hover:underline"
-                >
-                  <span>Dapatkan API Key Gratis</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setGeminiApiKey('');
-                      setKeyInput('');
-                      setHasCustomKey(false);
-                      setShowKeyModal(false);
-                    }}
-                    className="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors"
-                  >
-                    Reset
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all cursor-pointer"
-                  >
-                    Simpan
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
