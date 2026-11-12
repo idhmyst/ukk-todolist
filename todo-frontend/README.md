@@ -109,6 +109,7 @@ type Todo struct {
     Priority    string    `gorm:"type:varchar(10);default:'medium'" json:"priority"`
     IsCompleted bool      `gorm:"default:false" json:"is_completed"`
     DueDate     string    `gorm:"type:varchar(50)" json:"due_date"`
+    Reminder    string    `gorm:"type:varchar(20);default:'30m'" json:"reminder"`
     CreatedAt   time.Time `json:"created_at"`
     UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -117,6 +118,7 @@ type Todo struct {
 * **`gorm:"..."`**: Anotasi khusus GORM untuk menentukan tipe kolom MySQL, primary key, dan auto-increment.
 * **`json:"..."`**: Anotasi serializer untuk menentukan nama key saat data dikonversi ke format JSON.
 * **`binding:"required"`**: Validasi bawaan Gin yang otomatis menolak request jika field tersebut kosong.
+* **`Reminder`**: Menyimpan preferensi waktu pengingat deadline (`30m`, `1h`, `5m`, atau `none`).
 
 #### Struktur Input Update dengan Pointer:
 ```go
@@ -125,6 +127,7 @@ type UpdateTodoInput struct {
     Priority    *string `json:"priority"`
     IsCompleted *bool   `json:"is_completed"`
     DueDate     *string `json:"due_date"`
+    Reminder    *string `json:"reminder"`
 }
 ```
 > **Kenapa Menggunakan Pointer (`*string`, `*bool`)?**  
@@ -173,7 +176,8 @@ Base URL Backend: **`http://localhost:8080/api`**
       "title": "Selesaikan modul 4 UKK PPLG",
       "priority": "high",
       "is_completed": false,
-      "due_date": "2026-11-20",
+      "due_date": "2026-11-20T17:00",
+      "reminder": "30m",
       "created_at": "2026-11-10T10:00:00Z",
       "updated_at": "2026-11-10T10:00:00Z"
     }
@@ -191,7 +195,8 @@ Base URL Backend: **`http://localhost:8080/api`**
 {
   "title": "Mengerjakan Laporan UKK",
   "priority": "medium",
-  "due_date": "2026-11-25"
+  "due_date": "2026-11-25T21:00",
+  "reminder": "30m"
 }
 ```
 * **HTTP Status Code**: `201 Created`
@@ -203,7 +208,8 @@ Base URL Backend: **`http://localhost:8080/api`**
     "title": "Mengerjakan Laporan UKK",
     "priority": "medium",
     "is_completed": false,
-    "due_date": "2026-11-25",
+    "due_date": "2026-11-25T21:00",
+    "reminder": "30m",
     "created_at": "2026-11-10T10:05:00Z",
     "updated_at": "2026-11-10T10:05:00Z"
   }
@@ -213,19 +219,20 @@ Base URL Backend: **`http://localhost:8080/api`**
 ---
 
 ### 3. `PUT /api/todos/:id` — Update Tugas / Toggle Selesai
-* **Tujuan**: Mengubah status selesai (`is_completed`), judul, prioritas, atau deadline tugas berdasarkan parameter ID.
+* **Tujuan**: Mengubah status selesai (`is_completed`), judul, prioritas, deadline, atau pengingat tugas berdasarkan parameter ID.
 * **Request Payload Contoh 1 (Hanya toggle status selesai)**:
 ```json
 {
   "is_completed": true
 }
 ```
-* **Request Payload Contoh 2 (Edit data tugas)**:
+* **Request Payload Contoh 2 (Edit data tugas & deadline)**:
 ```json
 {
   "title": "Mengerjakan Laporan UKK (Revisi)",
   "priority": "high",
-  "due_date": "2026-11-28"
+  "due_date": "2026-11-28T14:30",
+  "reminder": "1h"
 }
 ```
 * **HTTP Status Code**: `200 OK`
@@ -264,19 +271,21 @@ Struktur komponen di `todo-frontend/src/`:
 ```text
 todo-frontend/src/
 ├── components/
-│   ├── Navbar.jsx          # Header minimalis dengan branding "Kelarin." & tombol refresh
-│   ├── TodoForm.jsx        # Formulir input tugas: Judul, Prioritas, Deadline, dan Submit
+│   ├── Navbar.jsx          # Header minimalis dengan branding "Kelarin.", tombol "Tes Nada Dering", & "Widget Desktop"
+│   ├── TodoForm.jsx        # Formulir input tugas: Judul, Prioritas, Kapsul Tanggal & Jam, Pengingat, & Preset Jam
 │   ├── FilterBar.jsx       # Search bar real-time, Tab filter fleksibel, Selector Urutan, & Counter sisa tugas
-│   ├── TodoItem.jsx        # Kartu item to-do: Checkbox, badge prioritas, badge deadline pintar, edit & hapus
-│   ├── EditModal.jsx       # Modal popup untuk mengubah rincian tugas
+│   ├── TodoItem.jsx        # Kartu item to-do: Checkbox, badge prioritas, badge deadline pintar, badge pengingat, edit & hapus
+│   ├── EditModal.jsx       # Modal popup untuk mengubah rincian tugas (Judul, Prioritas, Tanggal, Jam, & Pengingat)
+│   ├── DesktopWidget.jsx   # Widget melayang Dynamic Notch untuk desktop
 │   ├── LoadingSkeleton.jsx # Shimmer animasi placeholder saat pertama kali memuat data
 │   ├── EmptyState.jsx      # Tampilan visual informatif jika daftar tugas masih kosong
 │   └── ErrorAlert.jsx      # Banner interaktif jika backend Golang belum dinyalakan di port 8080
 ├── services/
 │   └── api.js              # Instance Axios terpusat untuk komunikasi ke REST API Golang
 ├── utils/
-│   └── todoHelpers.js      # Algoritma Smart Urgency Sorting & kalkulasi kedekatan deadline
-├── App.jsx                 # Komponen utama (State management, Optimistic UI, & Toast)
+│   ├── todoHelpers.js      # Algoritma Smart Urgency Sorting, validasi tanggal lampau, & kalkulasi deadline
+│   └── audioAlert.js       # Modul nada dering: Web Audio API Synthesizer, Loop Controller 60 detik & Push Notification
+├── App.jsx                 # Komponen utama (State management, interval deadline checker, banner melayang, Optimistic UI)
 ├── index.css               # Setup Tailwind CSS, custom scrollbar, dan perlindungan responsif
 └── main.jsx                # Entrypoint ReactDOM untuk mounting ke #root
 ```
@@ -363,6 +372,25 @@ const handleToggleStatus = async (id, nextStatus) => {
    * **Dua Cara Akses**:
      1. Klik tombol **Widget Desktop** di Navbar utama untuk pratinjau di layar atau membuka jendela melayang terpisah.
      2. Jalankan file `buka-widget-desktop.bat` untuk membukanya sebagai widget desktop Windows tanpa border browser (*frameless app*).
+9. **Pengaturan Batas Waktu Terpadu (Unified Date & Time Capsule)**:
+   * Menggabungkan tanggal dan jam deadline ke dalam satu kapsul elegan `[ 📅 mm/dd/yyyy | 🕒 23:59 (✕) ]`.
+   * Dilengkapi tombol pintas **Pilihan Jam Cepat (*Quick Presets*)**: `09:00 (Pagi)`, `12:00 (Siang)`, `17:00 (Sore)`, `21:00 (Malam)`, dan `23:59 (Akhir Hari)`.
+   * Tombol `(✕)` instan untuk mereset/menghapus batas waktu jika tugas tidak memiliki deadline.
+10. **Proteksi Berlapis Anti-Tanggal Lampau (Hari Kemarin Terkunci)**:
+   * **Di Sisi UI**: Atribut `min={getMinDateString()}` otomatis mengunci dan menonaktifkan (*disabled*) tanggal-tanggal kemarin di kalender browser agar pengguna tidak dapat mengkliknya.
+   * **Di Sisi Validasi Runtime Frontend**: Jika pengguna memasukkan tanggal/jam lampau, muncul peringatan interaktif merah: *"Tenggat waktu tidak boleh tanggal atau jam yang sudah lewat!"*.
+   * **Di Sisi Backend REST API**: Fungsi `CreateTodo` dan `UpdateTodo` memvalidasi waktu via `time.ParseInLocation`. Jika waktu berada di masa lalu, server membalas dengan status HTTP `400 Bad Request`.
+11. **Sistem Pengingat Deadline & Melodi Akustik (Loop 1 Menit)**:
+   * **Opsi Pengingat Fleksibel**: Pengguna dapat memilih waktu alarm: `30 Menit` *(Standar)*, `1 Jam`, `5 Menit`, atau `Tanpa Notifikasi`.
+   * **Synthesizer Nada Akustik (Web Audio API)**: Menghasilkan arpeggio melodi harmonis murni (C5 – E5 – G5 – C6 – E6) secara offline tanpa dependensi koneksi internet, dengan fallback file `ringtone.wav`.
+   * **Loop Dering 60 Detik (1 Menit)**: Saat batas pengingat tercapai, melodi berulang terus menerus selama 1 menit atau hingga pengguna menekan tombol **"Tandai Selesai"** atau tombol **"Heningkan"**.
+   * **Indikator Progres & Hitung Mundur**: Dilengkapi bar progres animasi yang berkurang mulus dari 60 detik hingga 0 detik (*live countdown*).
+12. **Banner Notifikasi Melayang Modern (Glassmorphism Dark)**:
+   * Desain kartu notifikasi mewah semi-transparan (`bg-slate-950/95 backdrop-blur-2xl`) dengan ambient glow dan lencana lonceng gradien beranimasi pantulan (*bounce*) serta titik merah aktif (*pulsing ping*).
+   * Menampilkan format tanggal ramah manusia (misal: `Tenggat: 12 Nov 2026, 08:00`), bukan lagi format mentah ISO (`2026-11-12T08:00`).
+   * Menyediakan dua tombol aksi tegas: **"Heningkan"** (mematikan nada dan menutup banner) dan **"Tandai Selesai"** (menyelesaikan tugas seketika).
+13. **Antarmuka Minimalis Bebas Distraksi**:
+   * Dihilangkannya badge jam pembuatan tugas pada kartu agar pengguna dapat fokus murni pada batas waktu penyelesaian tugas (*deadline focus*).
 
 ---
 
@@ -473,6 +501,25 @@ Gunakan bagian ini untuk melatih mental dan memperkuat pemahaman sebelum present
 ### Q8: "Bagaimana kamu memastikan aplikasi ini responsif di layar ponsel maupun desktop?"
 > **Jawaban:**  
 > *"Saya menggunakan Tailwind CSS dengan pendekatan Mobile-First. Semua elemen dasar diatur untuk layar sempit terlebih dahulu, kemudian ditingkatkan pada breakpoint `sm:` (640px) dan `md:` (768px). Selain itu, form dan tab filter menggunakan `flex-wrap` dan `min-w-0`, serta seluruh elemen menerapkan `box-sizing: border-box`, sehingga tidak akan ada elemen yang terpotong ke kanan saat layar ditarik sempit."*
+
+---
+
+### Q9: "Bagaimana cara kerja nada dering dan pengingat deadline di aplikasi kamu?"
+> **Jawaban:**  
+> *"Sistem pengingat deadline bekerja secara reaktif dan otomatis melalui beberapa tahap:*  
+> 1. *Setiap 10 detik, komponen utama `App.jsx` menjalankan interval untuk membandingkan waktu sekarang dengan waktu tenggat (`due_date`) pada semua tugas yang belum selesai.*  
+> 2. *Jika selisih menit memasuki ambang pengingat yang dipilih pengguna (`1 jam`, `30 menit`, atau `5 menit`), sistem mengaktifkan nada dering via fungsi `startDeadlineRingtoneLoop()`.*  
+> 3. *Nada dering dibangkitkan secara mandiri menggunakan **Web Audio API Oscillator** (akustik harmonis murni tanpa perlu koneksi internet), lalu diulang secara loop selama 60 detik (1 menit) bersamaan dengan banner notifikasi melayang di layar.*  
+> 4. *Saat pengguna mengklik tombol 'Tandai Selesai' atau 'Heningkan', fungsi `stopDeadlineRingtoneLoop()` dipanggil untuk segera menghentikan audio."*
+
+---
+
+### Q10: "Bagaimana sistem kamu mencegah pengguna memasukkan deadline yang sudah lewat (hari kemarin)?"
+> **Jawaban:**  
+> *"Aplikasi menerapkan prinsip **Defense in Depth** (keamanan dan validasi berlapis):*  
+> 1. *Di sisi antarmuka (UI): Input tanggal menggunakan atribut `min` yang diisi tanggal hari ini (`getMinDateString()`), sehingga kalender bawaan peramban langsung menonaktifkan (disable) seluruh tanggal lampau.*  
+> 2. *Di sisi frontend runtime: Saat tombol submit ditekan, fungsi `handleSubmit` memverifikasi apakah waktu yang dipilih berada di masa lalu. Jika iya, sistem langsung menampilkan peringatan merah.*  
+> 3. *Di sisi backend REST API: Controller Golang menggunakan `time.ParseInLocation` untuk memvalidasi nilai `due_date`. Jika klien mengirimkan waktu masa lalu (misal melalui Postman / curl), server Golang menolak request dengan status HTTP `400 Bad Request`."*
 
 ---
 

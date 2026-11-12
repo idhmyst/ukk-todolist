@@ -177,7 +177,8 @@ Base URL: `http://localhost:8080`
       "title": "Membuat Desain UI Frontend",
       "priority": "high",
       "is_completed": false,
-      "due_date": "2026-11-20",
+      "due_date": "2026-11-20T17:00",
+      "reminder": "30m",
       "created_at": "2026-11-12T07:15:00+07:00",
       "updated_at": "2026-11-12T07:15:00+07:00"
     }
@@ -196,7 +197,8 @@ Base URL: `http://localhost:8080`
 {
   "title": "Belajar React dan Golang",
   "priority": "high",
-  "due_date": "2026-11-25"
+  "due_date": "2026-11-25T21:00",
+  "reminder": "30m"
 }
 ```
 - **Response `201 Created`**:
@@ -207,12 +209,14 @@ Base URL: `http://localhost:8080`
     "title": "Belajar React dan Golang",
     "priority": "high",
     "is_completed": false,
-    "due_date": "2026-11-25",
+    "due_date": "2026-11-25T21:00",
+    "reminder": "30m",
     "created_at": "2026-11-12T07:16:00+07:00",
     "updated_at": "2026-11-12T07:16:00+07:00"
   }
 }
 ```
+- **Catatan Validasi**: Backend akan memvalidasi field `due_date`. Jika klien mengirimkan tanggal/jam masa lalu (sebelum waktu sekarang), server akan merespons dengan HTTP `400 Bad Request`.
 
 ---
 
@@ -225,7 +229,9 @@ Base URL: `http://localhost:8080`
 {
   "is_completed": true,
   "title": "Belajar React, Golang, dan Cloud DB",
-  "priority": "high"
+  "priority": "high",
+  "due_date": "2026-11-28T15:00",
+  "reminder": "1h"
 }
 ```
 - **Response `200 OK`**:

@@ -72,8 +72,10 @@ Buka peramban (browser) dan akses alamat **http://localhost:5173**.
 ## 📖 Dokumentasi Mendalam & Bahan Belajar UKK
 Untuk membaca penjelasan detail baris per baris mengenai:
 1. Cara kerja REST API, JSON, dan status code
-2. Arsitektur GORM dan struct Go
-3. Konsep React Hooks & Optimistic UI
-4. **Kisi-kisi 8 pertanyaan guru penguji UKK beserta kunci jawabannya**
+2. Arsitektur GORM dan struct Go (termasuk skema kolom `reminder`)
+3. Konsep React Hooks, Optimistic UI, & Web Audio API
+4. **Fitur Pengingat Deadline, Melodi Nada Dering Akustik (Loop 1 Menit), & Kapsul Tanggal/Jam Terpadu**
+5. **Proteksi Berlapis Anti-Tanggal Lampau (Hari kemarin terkunci di UI & ditolak server)**
+6. **Kisi-kisi 10 pertanyaan guru penguji UKK beserta kunci jawabannya**
 
 Silakan buka file: 👉 **[todo-frontend/README.md](file:///d:/TELKOM/ukk-todolist/todo-frontend/README.md)**.
