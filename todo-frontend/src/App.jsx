@@ -236,10 +236,23 @@ export default function App() {
     return groupTodosByPriority(listToGroup);
   }, [activeTodos, filteredTodos, activeFilter, sortBy]);
 
+  useEffect(() => {
+    if (isUrlWidget) {
+      document.body.style.backgroundColor = '#09090b';
+      document.body.style.backgroundImage = 'none';
+      document.body.style.margin = '0';
+      document.body.style.padding = '0';
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.backgroundColor = '';
+      document.body.style.backgroundImage = '';
+    }
+  }, [isUrlWidget]);
+
   // Jika aplikasi dibuka dalam mode pop-up widget desktop murni (?mode=widget)
   if (isUrlWidget) {
     return (
-      <main className="min-h-screen w-full bg-transparent p-2 flex flex-col items-center justify-start overflow-hidden">
+      <main className="h-screen w-full bg-[#09090b] text-white p-2 sm:p-3 flex flex-col justify-start overflow-hidden">
         <DesktopWidget
           todos={todos}
           onToggleStatus={handleToggleStatus}
@@ -249,6 +262,7 @@ export default function App() {
           onExitWidget={() => {
             window.location.href = window.location.pathname;
           }}
+          isStandalone={true}
         />
       </main>
     );
