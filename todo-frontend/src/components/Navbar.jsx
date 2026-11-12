@@ -1,19 +1,21 @@
 import React from 'react';
-import { CheckCircle2, RefreshCw, LayoutTemplate, Bell } from 'lucide-react';
+import { CheckCircle2, RefreshCw, LayoutTemplate, Bell, Sparkles } from 'lucide-react';
 
 export default function Navbar({
   isRefreshing,
   onRefresh,
   onToggleWidgetMode,
   onTestRingtone,
+  onToggleAi,
+  showAiMobile,
 }) {
   return (
-    <header className="mb-7 pb-6 border-b border-slate-100">
+    <header className="mb-6 pb-5 border-b border-slate-100">
       <div className="flex items-center justify-between gap-4">
         {/* Brand & Title */}
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white ring-4 ring-indigo-50 flex-shrink-0">
-            <CheckCircle2 className="w-6 h-6 stroke-[2.2]" />
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white ring-4 ring-indigo-50 flex-shrink-0">
+            <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]" />
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 flex items-center">
@@ -24,6 +26,18 @@ export default function Navbar({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
+          {/* Mobile AI Toggle Button */}
+          <button
+            type="button"
+            onClick={onToggleAi}
+            title="Buka Kelarin AI Assistant"
+            className="lg:hidden flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 active:from-indigo-700 active:to-purple-700 rounded-xl shadow-xs transition-all cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+            <span className="hidden sm:inline">AI Assistant</span>
+            <span className="sm:hidden">AI</span>
+          </button>
+
           {/* Test Ringtone Button */}
           <button
             type="button"

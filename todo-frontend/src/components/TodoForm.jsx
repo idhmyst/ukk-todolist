@@ -36,13 +36,20 @@ const PRIORITY_OPTIONS = [
   },
 ];
 
-export default function TodoForm({ onAddTodo, isSubmitting }) {
+export default function TodoForm({ onAddTodo, isSubmitting, initialDate }) {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState('medium');
-  const [dueDate, setDueDate] = useState('');
+  const [dueDate, setDueDate] = useState(initialDate || '');
   const [dueTime, setDueTime] = useState('');
   const [reminder, setReminder] = useState('30m');
   const [validationError, setValidationError] = useState('');
+
+  // Sinkronisasi jika tanggal dipilih dari Kalender
+  React.useEffect(() => {
+    if (initialDate) {
+      setDueDate(initialDate);
+    }
+  }, [initialDate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

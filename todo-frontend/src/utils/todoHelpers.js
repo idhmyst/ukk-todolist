@@ -336,3 +336,95 @@ export function groupTodosByPriority(todos) {
   return sections;
 }
 
+/**
+ * Format objek Date menjadi string tanggal format YYYY-MM-DD
+ */
+export function formatDateKey(d) {
+  if (!d || !(d instanceof Date) || isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Nama bulan dalam Bahasa Indonesia
+ */
+export const INDO_MONTH_NAMES = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
+
+/**
+ * Menghasilkan matriks hari kalender (Senin s/d Minggu) untuk tahun & bulan tertentu
+ */
+export function getCalendarDays(year, month) {
+  // First day of target month (0-indexed month)
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  // In JavaScript: Sunday = 0, Monday = 1, ... Saturday = 6
+  // In Indonesian calendar: Week starts on Monday (Senin = 0, ..., Minggu = 6)
+  const firstDayOfWeek = (firstDay.getDay() + 6) % 7;
+
+  const todayKey = formatDateKey(new Date());
+  const days = [];
+
+  // Padding days from previous month
+  const prevMonthLastDay = new Date(year, month, 0).getDate();
+  for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+    const d = new Date(year, month - 1, prevMonthLastDay - i);
+    days.push({
+      date: d,
+      dateKey: formatDateKey(d),
+      dayNum: d.getDate(),
+      isCurrentMonth: false,
+      isToday: formatDateKey(d) === todayKey,
+    });
+  }
+
+  // Days of current month
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const dateObj = new Date(year, month, d);
+    days.push({
+      date: dateObj,
+      dateKey: formatDateKey(dateObj),
+      dayNum: d,
+      isCurrentMonth: true,
+      isToday: formatDateKey(dateObj) === todayKey,
+    });
+  }
+
+  // Padding days for next month to complete the last week (multiple of 7)
+  const remaining = (7 - (days.length % 7)) % 7;
+  for (let d = 1; d <= remaining; d++) {
+    const dateObj = new Date(year, month + 1, d);
+    days.push({
+      date: dateObj,
+      dateKey: formatDateKey(dateObj),
+      dayNum: d,
+      isCurrentMonth: false,
+      isToday: formatDateKey(dateObj) === todayKey,
+    });
+  }
+
+  return days;
+}
+
+/**
+ * Mengelompokkan todos berdasarkan dateKey (YYYY-MM-DD)
+ */
+export function getTodosByDateMap(todos = []) {
+  const map = new Map();
+  todos.forEach((todo) => {
+    if (!todo.due_date) return;
+    const dateKey = String(todo.due_date).slice(0, 10);
+    if (!map.has(dateKey)) {
+      map.set(dateKey, []);
+    }
+    map.get(dateKey).push(todo);
+  });
+  return map;
+}
+
+

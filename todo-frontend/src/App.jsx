@@ -8,6 +8,8 @@ import LoadingSkeleton from './components/LoadingSkeleton';
 import EmptyState from './components/EmptyState';
 import ErrorAlert from './components/ErrorAlert';
 import DesktopWidget from './components/DesktopWidget';
+import CalendarView from './components/CalendarView';
+import AiAssistant from './components/AiAssistant';
 import {
   getTodos,
   createTodo,
@@ -40,6 +42,9 @@ import {
   VolumeX,
   X,
   Clock,
+  ListTodo,
+  Calendar as CalendarIcon,
+  Sparkles,
 } from 'lucide-react';
 
 export default function App() {
@@ -48,6 +53,12 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [isBackendOnline, setIsBackendOnline] = useState(false);
+
+  // Mode Tampilan: 'tasks' (Daftar Tugas) | 'calendar' (Kalender & Jadwal)
+  const [viewMode, setViewMode] = useState('tasks');
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
+  const [prefillDate, setPrefillDate] = useState('');
+  const [showAiMobile, setShowAiMobile] = useState(false);
 
   // Filters, Search & Smart Urgency Sorting
   const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'pending' | 'completed'
@@ -91,6 +102,16 @@ export default function App() {
       setToast((prev) => (prev?.message === message ? null : prev));
     }, 3500);
   }, []);
+
+  // Navigasi dari kalender ke form tambah tugas
+  const handleAddTodoForDate = useCallback(
+    (dateKey) => {
+      setPrefillDate(dateKey);
+      setViewMode('tasks');
+      showToast(`Tanggal ${dateKey} siap diisi di formulir tugas! 📅`, 'success');
+    },
+    [showToast]
+  );
 
   // Tes bunyikan nada dering melodi & minta izin notifikasi browser
   const handleTestRingtone = async () => {
@@ -506,19 +527,86 @@ export default function App() {
         />
       )}
 
-      {/* Main Container: 100% Fluid on Narrow Views, Ergonomic on Desktop */}
-      <div className="w-full max-w-5xl flex-1 flex flex-col min-w-0">
-        <div className="w-full max-w-full flex-1 bg-white rounded-2xl sm:rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-200/90 p-3 sm:p-6 lg:p-8 flex flex-col transition-all min-w-0 overflow-hidden">
-          {/* Header & Navbar */}
-          <Navbar
-            isRefreshing={isLoading}
-            onRefresh={() => fetchTodosData(false)}
-            onToggleWidgetMode={() => setIsWidgetMode(!isWidgetMode)}
-            onTestRingtone={handleTestRingtone}
-          />
+      {/* Main Dual-Pane Container: 2-Side Layout */}
+      <div className="w-full max-w-7xl flex-1 flex flex-col min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
+          {/* SIDE 1: Main Application Side (Tasks & Calendar) */}
+          <div className="lg:col-span-7 xl:col-span-8 w-full min-w-0 bg-white rounded-2xl sm:rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-200/90 p-3 sm:p-6 lg:p-8 flex flex-col transition-all overflow-hidden">
+            {/* Header & Navbar */}
+            <Navbar
+              isRefreshing={isLoading}
+              onRefresh={() => fetchTodosData(false)}
+              onToggleWidgetMode={() => setIsWidgetMode(!isWidgetMode)}
+              onTestRingtone={handleTestRingtone}
+              onToggleAi={() => setShowAiMobile((prev) => !prev)}
+              showAiMobile={showAiMobile}
+            />
 
-          {/* Form Tambah Tugas */}
-          <TodoForm onAddTodo={handleAddTodo} isSubmitting={isSubmitting} />
+            {/* View Switcher: Daftar Tugas vs Kalender & Jadwal */}
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-6 p-1.5 bg-slate-100 rounded-2xl">
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('tasks')}
+                  className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                    viewMode === 'tasks'
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <ListTodo className="w-4 h-4" />
+                  <span>Daftar Tugas</span>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-50 text-indigo-700 font-bold">
+                    {counts.all}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setViewMode('calendar')}
+                  className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                    viewMode === 'calendar'
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <CalendarIcon className="w-4 h-4" />
+                  <span>Kalender & Jadwal</span>
+                  {counts.pending > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold">
+                      {counts.pending}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Status info */}
+              <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 font-medium px-2">
+                <span>{counts.pending} belum selesai</span>
+                <span>•</span>
+                <span className="text-emerald-600 font-semibold">{counts.completed} selesai</span>
+              </div>
+            </div>
+
+            {/* Konten Berdasarkan Tab View: 'calendar' vs 'tasks' */}
+            {viewMode === 'calendar' ? (
+              <CalendarView
+                todos={todos}
+                selectedDate={selectedCalendarDate}
+                onSelectDate={(d) => setSelectedCalendarDate(d)}
+                onAddTodoForDate={handleAddTodoForDate}
+                onToggleStatus={handleToggleStatus}
+                onEditTodo={(t) => setEditingTodo(t)}
+                onDeleteTodo={handleDeleteTodo}
+              />
+            ) : (
+              <>
+                {/* Form Tambah Tugas */}
+                <TodoForm
+                  onAddTodo={handleAddTodo}
+                  isSubmitting={isSubmitting}
+                  initialDate={prefillDate}
+                />
 
           {/* Alert Error saat backend offline */}
           {errorMessage && (
@@ -698,8 +786,26 @@ export default function App() {
               </div>
             )}
           </div>
-        </div>
-      </div>
+        </>
+      )}
+    </div>
+
+    {/* SIDE 2: Kelarin AI Assistant (2-Side Layout: Sticky on Desktop, Collapsible on Mobile) */}
+    <div
+      className={`lg:col-span-5 xl:col-span-4 w-full ${
+        showAiMobile ? 'block' : 'hidden lg:block'
+      } lg:sticky lg:top-6 transition-all`}
+    >
+      <AiAssistant
+        currentTodos={todos}
+        onAddTodo={handleAddTodo}
+        onOpenCalendar={() => setViewMode('calendar')}
+        isOpen={true}
+        onClose={() => setShowAiMobile(false)}
+      />
+    </div>
+  </div>
+</div>
 
       {/* Modal Konfirmasi Bersihkan Semua Selesai */}
       {showClearCompletedModal && (

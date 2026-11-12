@@ -271,21 +271,24 @@ Struktur komponen di `todo-frontend/src/`:
 ```text
 todo-frontend/src/
 ├── components/
-│   ├── Navbar.jsx          # Header minimalis dengan branding "Kelarin.", tombol "Tes Nada Dering", & "Widget Desktop"
+│   ├── Navbar.jsx          # Header minimalis dengan branding "Kelarin.", tombol "Tes Nada Dering", "Widget Desktop", & toggle AI mobile
 │   ├── TodoForm.jsx        # Formulir input tugas: Judul, Prioritas, Kapsul Tanggal & Jam, Pengingat, & Preset Jam
 │   ├── FilterBar.jsx       # Search bar real-time, Tab filter fleksibel, Selector Urutan, & Counter sisa tugas
 │   ├── TodoItem.jsx        # Kartu item to-do: Checkbox, badge prioritas, badge deadline pintar, badge pengingat, edit & hapus
+│   ├── CalendarView.jsx    # Tampilan Kalender Interaktif: Grid bulanan, titik jadwal, alert deadline, & rincian hari
+│   ├── AiAssistant.jsx     # Side 2 Panel: Asisten AI Gemini 2.5 Flash untuk ekstraksi tugas via bahasa alami & chat
 │   ├── EditModal.jsx       # Modal popup untuk mengubah rincian tugas (Judul, Prioritas, Tanggal, Jam, & Pengingat)
 │   ├── DesktopWidget.jsx   # Widget melayang Dynamic Notch untuk desktop
 │   ├── LoadingSkeleton.jsx # Shimmer animasi placeholder saat pertama kali memuat data
 │   ├── EmptyState.jsx      # Tampilan visual informatif jika daftar tugas masih kosong
 │   └── ErrorAlert.jsx      # Banner interaktif jika backend Golang belum dinyalakan di port 8080
 ├── services/
-│   └── api.js              # Instance Axios terpusat untuk komunikasi ke REST API Golang
+│   ├── api.js              # Instance Axios terpusat untuk komunikasi ke REST API Golang
+│   └── aiService.js        # Layanan integrasi Google Gemini AI (gemini-2.5-flash) dengan fallback multi-model
 ├── utils/
-│   ├── todoHelpers.js      # Algoritma Smart Urgency Sorting, validasi tanggal lampau, & kalkulasi deadline
-│   └── audioAlert.js       # Modul nada dering: Web Audio API Synthesizer, Loop Controller 60 detik & Push Notification
-├── App.jsx                 # Komponen utama (State management, interval deadline checker, banner melayang, Optimistic UI)
+│   ├── todoHelpers.js      # Algoritma Smart Urgency Sorting, validasi tanggal lampau, kalkulasi deadline, & helper kalender
+│   └── audioAlert.js       # Modul nada dering: Web Audio API Synthesizer, Loop Controller di background & Push Notification
+├── App.jsx                 # Komponen utama (Layout 2 sisi, switcher tugas/kalender, alert deadline toast, Optimistic UI)
 ├── index.css               # Setup Tailwind CSS, custom scrollbar, dan perlindungan responsif
 └── main.jsx                # Entrypoint ReactDOM untuk mounting ke #root
 ```
@@ -380,17 +383,30 @@ const handleToggleStatus = async (id, nextStatus) => {
    * **Di Sisi UI**: Atribut `min={getMinDateString()}` otomatis mengunci dan menonaktifkan (*disabled*) tanggal-tanggal kemarin di kalender browser agar pengguna tidak dapat mengkliknya.
    * **Di Sisi Validasi Runtime Frontend**: Jika pengguna memasukkan tanggal/jam lampau, muncul peringatan interaktif merah: *"Tenggat waktu tidak boleh tanggal atau jam yang sudah lewat!"*.
    * **Di Sisi Backend REST API**: Fungsi `CreateTodo` dan `UpdateTodo` memvalidasi waktu via `time.ParseInLocation`. Jika waktu berada di masa lalu, server membalas dengan status HTTP `400 Bad Request`.
-11. **Sistem Pengingat Deadline & Melodi Akustik (Loop 1 Menit)**:
+11. **Sistem Pengingat Deadline & Melodi Akustik (Loop 1 Menit di Latar Belakang)**:
    * **Opsi Pengingat Fleksibel**: Pengguna dapat memilih waktu alarm: `30 Menit` *(Standar)*, `1 Jam`, `5 Menit`, atau `Tanpa Notifikasi`.
    * **Synthesizer Nada Akustik (Web Audio API)**: Menghasilkan arpeggio melodi harmonis murni (C5 – E5 – G5 – C6 – E6) secara offline tanpa dependensi koneksi internet, dengan fallback file `ringtone.wav`.
-   * **Loop Dering 60 Detik (1 Menit)**: Saat batas pengingat tercapai, melodi berulang terus menerus selama 1 menit atau hingga pengguna menekan tombol **"Tandai Selesai"** atau tombol **"Heningkan"**.
-   * **Indikator Progres & Hitung Mundur**: Dilengkapi bar progres animasi yang berkurang mulus dari 60 detik hingga 0 detik (*live countdown*).
-12. **Banner Notifikasi Melayang Modern (Glassmorphism Dark)**:
-   * Desain kartu notifikasi mewah semi-transparan (`bg-slate-950/95 backdrop-blur-2xl`) dengan ambient glow dan lencana lonceng gradien beranimasi pantulan (*bounce*) serta titik merah aktif (*pulsing ping*).
-   * Menampilkan format tanggal ramah manusia (misal: `Tenggat: 12 Nov 2026, 08:00`), bukan lagi format mentah ISO (`2026-11-12T08:00`).
-   * Menyediakan dua tombol aksi tegas: **"Heningkan"** (mematikan nada dan menutup banner) dan **"Tandai Selesai"** (menyelesaikan tugas seketika).
+   * **Loop Dering 60 Detik di Background**: Saat batas pengingat tercapai, melodi berulang otomatis selama 1 menit di latar belakang (*background*) tanpa mengganggu estetika antarmuka pengguna, dan otomatis berhenti sendiri atau saat ditekan tombol aksi.
+12. **Banner Notifikasi Melayang Minimalis & Modern (Dynamic Island Style)**:
+   * Desain kartu notifikasi ramping, bersih, dan mewah (`bg-slate-900/95 backdrop-blur-xl ring-1 ring-white/10`) berkonsep Dynamic Island / Modern Toast.
+   * Menampilkan format tanggal ramah manusia (misal: `Tenggat: 12 Nov 2026, 09.00`).
+   * Menyediakan dua tombol aksi tegas: **"Heningkan"** (mematikan nada seketika) dan **"Tandai Selesai"** (menyelesaikan tugas seketika).
 13. **Antarmuka Minimalis Bebas Distraksi**:
    * Dihilangkannya badge jam pembuatan tugas pada kartu agar pengguna dapat fokus murni pada batas waktu penyelesaian tugas (*deadline focus*).
+14. **Fitur Kalender Interaktif & Deteksi Jadwal / Alert**:
+   * **Grid Kalender Penuh**: Menampilkan matriks hari dalam bulan lengkap dengan navigasi antar-bulan dan tombol jalan pintas *Hari Ini*.
+   * **Indikator Titik & Notifikasi Jadwal**: Setiap tanggal menampilkan titik warna prioritas (*High / Medium / Low*) dan jumlah tugas terjadwal.
+   * **Pulsing Alert Bell**: Tanggal yang memiliki tugas mendesak atau mendekati tenggat waktu otomatis ditandai dengan ikon lonceng berkedip (*alert indicator*).
+   * **Panel Rincian Hari Terpilih**: Mengklik tanggal mana pun akan membuka rincian jadwal pada tanggal tersebut, menampilkan banner peringatan jadwal jika ada tugas aktif, dan menyediakan tombol pintas `+ Tambah di Tanggal Ini`.
+15. **Tata Letak 2 Sisi (2-Side Layout) & Kelarin AI Assistant (Gemini 2.5 Flash)**:
+   * **Dual-Pane Layout**: Layar terbagi secara ergonomis menjadi 2 sisi berdampingan pada desktop:
+     * **Sisi Kiri**: Ruang kerja utama untuk Daftar Tugas & Kalender Jadwal.
+     * **Sisi Kanan**: Panel Asisten AI cerdas (*sticky sidebar* di desktop & drawer responsif di mobile).
+   * **Ekstraksi Tugas via Perintah Bahasa Alami (Natural Language)**: Pengguna cukup mengetik instruksi bebas santai (*misal: "Besok jam 9 pagi tolong ingatkan bikin laporan fisika, prioritas high, notif 30 menit"*).
+   * **Google Gemini AI 2.5 Flash**: Menganalisis kalimat pengguna, mengekstrak judul, prioritas, tanggal & jam ISO, dan pengingat ke dalam kartu tugas pratinjau interaktif.
+   * **1-Klik Tambah ke Database**: Pengguna cukup menekan tombol `+ Tambah ke Daftar` untuk langsung menyimpan tugas ke database MySQL melalui REST API Golang.
+   * **Konsultasi & Manajemen Tugas**: Pengguna dapat bertanya seputar daftar tugas (*"Apa tugas saya yang paling mendesak?", "Ada jadwal apa hari ini?"*).
+   * **Resiliensi Multi-Model Fallback**: Jika model utama mengalami lonjakan permintaan (*high demand*), sistem otomatis beralih (*fallback*) ke `gemini-flash-latest` atau `gemini-2.5-pro` secara transparan.
 
 ---
 
