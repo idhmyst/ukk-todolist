@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Navbar from './components/Navbar';
 import TodoForm from './components/TodoForm';
 import FilterBar from './components/FilterBar';
@@ -19,7 +19,13 @@ import {
   sortTodos,
   groupTodosByDate,
   groupTodosByPriority,
+  getDeadlineInfo,
 } from './utils/todoHelpers';
+import {
+  playDeadlineRingtone,
+  requestNotificationPermission,
+  showBrowserNotification,
+} from './utils/audioAlert';
 import {
   CheckCircle2,
   AlertCircle,
@@ -27,6 +33,10 @@ import {
   Trash2,
   Check,
   Loader2,
+  Bell,
+  BellRing,
+  Volume2,
+  X,
 } from 'lucide-react';
 
 export default function App() {
@@ -47,6 +57,10 @@ export default function App() {
   const [showCompleted, setShowCompleted] = useState(false);
   const [showClearCompletedModal, setShowClearCompletedModal] = useState(false);
   const [isClearingCompleted, setIsClearingCompleted] = useState(false);
+
+  // Deadline Audio Alert & Notification States
+  const notifiedKeysRef = useRef(new Set());
+  const [activeAlertTodo, setActiveAlertTodo] = useState(null);
 
   // Desktop Floating Widget States
   const isUrlWidget = useMemo(() => {
@@ -75,6 +89,13 @@ export default function App() {
     }, 3500);
   }, []);
 
+  // Tes bunyikan nada dering melodi & minta izin notifikasi browser
+  const handleTestRingtone = async () => {
+    await requestNotificationPermission();
+    playDeadlineRingtone();
+    showToast('Melodi nada dering pengingat berhasil dibunyikan! 🔔', 'success');
+  };
+
   // Fetch todos dari Golang REST API
   const fetchTodosData = useCallback(async (isInitial = false) => {
     if (isInitial) setIsLoading(true);
@@ -96,11 +117,75 @@ export default function App() {
     fetchTodosData(true);
   }, [fetchTodosData]);
 
+  // Interval pengecekan berkala deadline (setiap 10 detik)
+  useEffect(() => {
+    const checkDeadlines = () => {
+      if (!todos || todos.length === 0) return;
+
+      todos.forEach((todo) => {
+        // Hanya cek tugas aktif yang memiliki due_date dan reminder bukan 'none'
+        if (todo.is_completed || !todo.due_date) return;
+        if (todo.reminder === 'none') return;
+
+        const info = getDeadlineInfo(todo.due_date);
+        if (!info) return;
+
+        const diffMinutes = info.diffMinutes;
+        const reminderSetting = todo.reminder || '30m';
+
+        // Hitung batas ambang pengingat
+        let thresholdMinutes = 30;
+        if (reminderSetting === '1h') thresholdMinutes = 60;
+        else if (reminderSetting === '5m') thresholdMinutes = 5;
+
+        // 1. Kondisi Notifikasi Pengingat (1 jam, 30 menit, atau 5 menit sebelum batas waktu)
+        const reminderKey = `remind_${todo.id}_${reminderSetting}`;
+        if (diffMinutes <= thresholdMinutes && diffMinutes > 0) {
+          if (!notifiedKeysRef.current.has(reminderKey)) {
+            notifiedKeysRef.current.add(reminderKey);
+            playDeadlineRingtone();
+            showBrowserNotification(
+              `🔔 Pengingat Deadline: ${todo.title}`,
+              `Tersisa ${diffMinutes} menit sebelum tenggat waktu! (${info.formattedDate})`
+            );
+            setActiveAlertTodo({
+              todo,
+              diffMinutes,
+              type: 'reminder',
+            });
+          }
+        }
+
+        // 2. Kondisi Notifikasi Saat Deadline Tiba / Baru Saja Terlewat (0 s/d -15 menit)
+        const dueKey = `due_${todo.id}`;
+        if (diffMinutes <= 0 && diffMinutes >= -15) {
+          if (!notifiedKeysRef.current.has(dueKey)) {
+            notifiedKeysRef.current.add(dueKey);
+            playDeadlineRingtone();
+            showBrowserNotification(
+              `⏰ Tenggat Waktu Tiba: ${todo.title}`,
+              `Tenggat waktu tugas ini telah habis! Segera selesaikan tugasmu.`
+            );
+            setActiveAlertTodo({
+              todo,
+              diffMinutes,
+              type: 'due',
+            });
+          }
+        }
+      });
+    };
+
+    checkDeadlines();
+    const intervalId = setInterval(checkDeadlines, 10000);
+    return () => clearInterval(intervalId);
+  }, [todos]);
+
   // Handler: Tambah Todo (POST /api/todos)
-  const handleAddTodo = async (title, priority, dueDate) => {
+  const handleAddTodo = async (title, priority, dueDate, reminder = '30m') => {
     setIsSubmitting(true);
     try {
-      const newTodo = await createTodo(title, priority, dueDate);
+      const newTodo = await createTodo(title, priority, dueDate, reminder);
       setTodos((prev) => [newTodo, ...prev]);
       showToast('Tugas baru berhasil ditambahkan!', 'success');
       setIsBackendOnline(true);
@@ -290,6 +375,71 @@ export default function App() {
         </div>
       )}
 
+      {/* Floating Active Deadline Alert Banner with Ringtone Animation */}
+      {activeAlertTodo && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-3 animate-in slide-in-from-top-4 duration-300">
+          <div className="bg-slate-950/95 text-white rounded-2xl p-4 shadow-2xl border-2 border-indigo-500 ring-4 ring-indigo-500/20 backdrop-blur-xl">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg animate-bounce flex-shrink-0">
+                  <BellRing className="w-5 h-5 text-amber-300" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-600 text-white shadow-xs">
+                      {activeAlertTodo.type === 'due' ? 'Tenggat Waktu Tiba' : 'Pengingat Deadline'}
+                    </span>
+                    <span className="text-xs text-indigo-200 font-bold">
+                      {activeAlertTodo.diffMinutes > 0
+                        ? `Sisa ${activeAlertTodo.diffMinutes} menit lagi!`
+                        : 'Waktu telah habis!'}
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-bold text-white mt-1 leading-snug">
+                    {activeAlertTodo.todo.title}
+                  </h4>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Tenggat: {activeAlertTodo.todo.due_date}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveAlertTodo(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                title="Tutup banner pengingat"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  playDeadlineRingtone();
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <Volume2 className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Bunyikan Nada</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleToggleStatus(activeAlertTodo.todo.id, true);
+                  setActiveAlertTodo(null);
+                }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md transition-colors cursor-pointer"
+              >
+                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                <span>Tandai Selesai</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Dynamic Notch Desktop Widget Overlay */}
       {isWidgetMode && (
         <DesktopWidget
@@ -311,6 +461,7 @@ export default function App() {
             isRefreshing={isLoading}
             onRefresh={() => fetchTodosData(false)}
             onToggleWidgetMode={() => setIsWidgetMode(!isWidgetMode)}
+            onTestRingtone={handleTestRingtone}
           />
 
           {/* Form Tambah Tugas */}

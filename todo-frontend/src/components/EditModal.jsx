@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Edit3, Loader2, AlertCircle } from 'lucide-react';
+import { X, Edit3, Loader2, AlertCircle, Bell } from 'lucide-react';
 
 const PRIORITY_OPTIONS = [
   { value: 'low', label: 'Low (Santai)' },
@@ -17,6 +17,7 @@ export default function EditModal({
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState('medium');
   const [dueDate, setDueDate] = useState('');
+  const [reminder, setReminder] = useState('30m');
   const [validationError, setValidationError] = useState('');
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export default function EditModal({
       setTitle(todo.title || '');
       setPriority(todo.priority || 'medium');
       setDueDate(todo.due_date || '');
+      setReminder(todo.reminder || '30m');
       setValidationError('');
     }
   }, [todo]);
@@ -43,6 +45,7 @@ export default function EditModal({
       title: trimmedTitle,
       priority,
       due_date: dueDate,
+      reminder,
     });
     if (success) {
       onClose();
@@ -127,14 +130,35 @@ export default function EditModal({
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Deadline (Due Date)
+                Deadline (Due Date & Jam)
               </label>
               <input
-                type="date"
+                type="datetime-local"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
               />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Pengingat Notifikasi
+              </label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-600">
+                  <Bell className="w-3.5 h-3.5" />
+                </div>
+                <select
+                  value={reminder}
+                  onChange={(e) => setReminder(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                >
+                  <option value="30m">🔔 30 Menit sebelum deadline (Standar)</option>
+                  <option value="1h">🔔 1 Jam sebelum deadline</option>
+                  <option value="5m">🔔 5 Menit sebelum deadline (Segera)</option>
+                  <option value="none">🔕 Tanpa Notifikasi</option>
+                </select>
+              </div>
             </div>
           </div>
 

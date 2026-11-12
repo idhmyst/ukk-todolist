@@ -1,10 +1,11 @@
 import React from 'react';
-import { CheckCircle2, RefreshCw, LayoutTemplate } from 'lucide-react';
+import { CheckCircle2, RefreshCw, LayoutTemplate, Bell } from 'lucide-react';
 
 export default function Navbar({
   isRefreshing,
   onRefresh,
   onToggleWidgetMode,
+  onTestRingtone,
 }) {
   return (
     <header className="mb-7 pb-6 border-b border-slate-100">
@@ -23,6 +24,18 @@ export default function Navbar({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
+          {/* Test Ringtone Button */}
+          <button
+            type="button"
+            onClick={onTestRingtone}
+            title="Tes bunyikan nada dering pengingat & aktifkan izin notifikasi"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-600 hover:text-white active:bg-indigo-700 rounded-xl border border-indigo-200 hover:border-indigo-600 transition-all cursor-pointer shadow-xs group"
+          >
+            <Bell className="w-4 h-4 text-indigo-600 group-hover:text-white transition-colors" />
+            <span className="hidden sm:inline">Tes Nada Dering</span>
+            <span className="sm:hidden">Tes Suara</span>
+          </button>
+
           {/* Widget Desktop Button */}
           <button
             type="button"

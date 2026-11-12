@@ -98,10 +98,13 @@ export default function TodoForm({ onAddTodo, isSubmitting }) {
           )}
         </div>
 
-        {/* Priority, Due Date Inputs & Submit Button */}
+        {/* Priority, Due Date, Reminder Inputs & Submit Button */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-3 pt-0.5 w-full max-w-full min-w-0">
           {/* Priority Select */}
-          <div className="w-full max-w-full min-w-0 lg:col-span-4 relative">
+          <div className="w-full max-w-full min-w-0 sm:col-span-1 lg:col-span-3 relative">
+            <label htmlFor="todo-priority" className="sr-only">
+              Prioritas Tugas
+            </label>
             <select
               id="todo-priority"
               value={priority}
@@ -129,24 +132,62 @@ export default function TodoForm({ onAddTodo, isSubmitting }) {
             </div>
           </div>
 
-          {/* Due Date Input */}
-          <div className="w-full max-w-full min-w-0 lg:col-span-4 relative">
+          {/* Due Date & Time Input */}
+          <div className="w-full max-w-full min-w-0 sm:col-span-1 lg:col-span-4 relative">
+            <label htmlFor="todo-due-date" className="sr-only">
+              Tenggat Waktu
+            </label>
             <input
-              type="date"
+              id="todo-due-date"
+              type="datetime-local"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
               disabled={isSubmitting}
-              className="w-full max-w-full min-w-0 px-3 py-2 text-xs sm:text-sm font-bold rounded-xl border-2 border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 cursor-pointer"
-              title="Tenggat waktu (Due Date) opsional"
+              className="w-full max-w-full min-w-0 px-3 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border-2 border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 cursor-pointer"
+              title="Tenggat waktu (Due Date & Jam)"
             />
           </div>
 
+          {/* Reminder Select (1 jam, 30 menit, 5 menit) */}
+          <div className="w-full max-w-full min-w-0 sm:col-span-1 lg:col-span-3 relative">
+            <label htmlFor="todo-reminder" className="sr-only">
+              Pengingat Notifikasi
+            </label>
+            <div className="relative">
+              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-600">
+                <Bell className="w-4 h-4" />
+              </div>
+              <select
+                id="todo-reminder"
+                value={reminder}
+                onChange={(e) => setReminder(e.target.value)}
+                disabled={isSubmitting}
+                className="w-full max-w-full min-w-0 appearance-none pl-8 pr-7 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border-2 border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 cursor-pointer"
+                title="Pilih kapan notifikasi deadline berbunyi"
+              >
+                <option value="30m">Notif: 30 Menit</option>
+                <option value="1h">Notif: 1 Jam</option>
+                <option value="5m">Notif: 5 Menit</option>
+                <option value="none">Tanpa Notifikasi</option>
+              </select>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+
           {/* Submit Button */}
-          <div className="w-full max-w-full min-w-0 sm:col-span-2 lg:col-span-4">
+          <div className="w-full max-w-full min-w-0 sm:col-span-1 lg:col-span-2">
             <button
               type="submit"
               disabled={isSubmitting || !title.trim()}
-              className="w-full max-w-full min-w-0 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-indigo-600/25 hover:shadow-indigo-600/40 transition-all focus:outline-none focus:ring-4 focus:ring-indigo-200"
+              className="w-full max-w-full min-w-0 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-indigo-600/25 hover:shadow-indigo-600/40 transition-all focus:outline-none focus:ring-4 focus:ring-indigo-200 cursor-pointer"
             >
               {isSubmitting ? (
                 <>

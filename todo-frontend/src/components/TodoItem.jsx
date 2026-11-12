@@ -7,6 +7,7 @@ import {
   Edit3,
   Loader2,
   AlertTriangle,
+  Bell,
 } from 'lucide-react';
 import { getDeadlineInfo, formatIndonesianDate } from '../utils/todoHelpers';
 
@@ -164,6 +165,29 @@ export default function TodoItem({
                   </span>
                 )}
               </>
+            )}
+
+            {/* Reminder Setting Badge */}
+            {todo.due_date && todo.reminder && todo.reminder !== 'none' && !todo.is_completed && (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200"
+                title={`Pengingat deadline berbunyi ${
+                  todo.reminder === '1h'
+                    ? '1 jam sebelumnya'
+                    : todo.reminder === '30m'
+                    ? '30 menit sebelumnya'
+                    : '5 menit sebelumnya'
+                }`}
+              >
+                <Bell className="w-3 h-3 text-indigo-500 flex-shrink-0" />
+                <span>
+                  {todo.reminder === '1h'
+                    ? 'Notif: 1 Jam'
+                    : todo.reminder === '30m'
+                    ? 'Notif: 30 Mnt'
+                    : 'Notif: 5 Mnt'}
+                </span>
+              </span>
             )}
 
             {/* Creation Date */}
