@@ -189,14 +189,6 @@ export default function TodoItem({
                 </span>
               </span>
             )}
-
-            {/* Creation Date */}
-            {todo.created_at && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium text-slate-500 bg-slate-100 border border-slate-200">
-                <Clock className="w-3 h-3 text-slate-400 flex-shrink-0" />
-                <span>{formatIndonesianDate(todo.created_at)}</span>
-              </span>
-            )}
           </div>
         </div>
       </div>
