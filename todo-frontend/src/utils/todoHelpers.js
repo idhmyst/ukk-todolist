@@ -45,6 +45,32 @@ export function parseLocalDate(dateStr) {
 }
 
 /**
+ * Menghasilkan string tanggal hari ini format YYYY-MM-DD
+ * untuk atribut min pada input tanggal agar mencegah pemilihan hari kemarin.
+ */
+export function getMinDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Menghasilkan string batas waktu minimum saat ini format YYYY-MM-DDTHH:mm
+ * agar input HTML datetime-local mencegah pemilihan hari kemarin / waktu lampau.
+ */
+export function getMinDateTimeString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+/**
  * Menghitung selisih waktu, menit, hari dan metadata urgensi tenggat waktu
  */
 export function getDeadlineInfo(dueDateStr) {

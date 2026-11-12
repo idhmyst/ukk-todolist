@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Plus, Loader2, Sparkles, AlertCircle, Bell } from 'lucide-react';
+import { Plus, Loader2, Sparkles, AlertCircle, Bell, Calendar, Clock } from 'lucide-react';
+import { parseLocalDate, getMinDateString } from '../utils/todoHelpers';
 
 const PRIORITY_OPTIONS = [
   {
@@ -29,6 +30,7 @@ export default function TodoForm({ onAddTodo, isSubmitting }) {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState('medium');
   const [dueDate, setDueDate] = useState('');
+  const [dueTime, setDueTime] = useState('');
   const [reminder, setReminder] = useState('30m');
   const [validationError, setValidationError] = useState('');
 
@@ -41,12 +43,29 @@ export default function TodoForm({ onAddTodo, isSubmitting }) {
       return;
     }
 
+    // Format dan validasi tanggal & jam deadline
+    let finalDueDate = '';
+    if (dueDate) {
+      const timePart = dueTime || '23:59';
+      finalDueDate = `${dueDate}T${timePart}`;
+      const parsed = parseLocalDate(finalDueDate);
+      if (parsed) {
+        const now = new Date();
+        // Toleransi 1 menit
+        if (parsed.getTime() < now.getTime() - 60000) {
+          setValidationError('Tenggat waktu tidak boleh tanggal atau jam yang sudah lewat!');
+          return;
+        }
+      }
+    }
+
     setValidationError('');
-    const success = await onAddTodo(trimmedTitle, priority, dueDate, reminder);
+    const success = await onAddTodo(trimmedTitle, priority, finalDueDate, reminder);
     if (success) {
       setTitle('');
       setPriority('medium');
       setDueDate('');
+      setDueTime('');
       setReminder('30m');
     }
   };
@@ -98,8 +117,8 @@ export default function TodoForm({ onAddTodo, isSubmitting }) {
           )}
         </div>
 
-        {/* Priority, Due Date, Reminder Inputs & Submit Button */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-3 pt-0.5 w-full max-w-full min-w-0">
+        {/* Priority, Due Date, Due Time, Reminder Inputs & Submit Button */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-2.5 pt-0.5 w-full max-w-full min-w-0">
           {/* Priority Select */}
           <div className="w-full max-w-full min-w-0 sm:col-span-1 lg:col-span-3 relative">
             <label htmlFor="todo-priority" className="sr-only">
@@ -132,24 +151,60 @@ export default function TodoForm({ onAddTodo, isSubmitting }) {
             </div>
           </div>
 
-          {/* Due Date & Time Input */}
-          <div className="w-full max-w-full min-w-0 sm:col-span-1 lg:col-span-4 relative">
+          {/* Due Date (Tanggal Deadline) */}
+          <div className="w-full max-w-full min-w-0 sm:col-span-1 lg:col-span-3 relative">
             <label htmlFor="todo-due-date" className="sr-only">
-              Tenggat Waktu
+              Tanggal Deadline
             </label>
-            <input
-              id="todo-due-date"
-              type="datetime-local"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              disabled={isSubmitting}
-              className="w-full max-w-full min-w-0 px-3 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border-2 border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 cursor-pointer"
-              title="Tenggat waktu (Due Date & Jam)"
-            />
+            <div className="relative">
+              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-600">
+                <Calendar className="w-4 h-4" />
+              </div>
+              <input
+                id="todo-due-date"
+                type="date"
+                value={dueDate}
+                min={getMinDateString()}
+                onChange={(e) => {
+                  setDueDate(e.target.value);
+                  if (!dueTime && e.target.value) {
+                    setDueTime('23:59');
+                  }
+                  if (validationError) setValidationError('');
+                }}
+                disabled={isSubmitting}
+                className="w-full max-w-full min-w-0 pl-8 pr-2 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border-2 border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 cursor-pointer"
+                title="Pilih tanggal deadline (hari kemarin terkunci)"
+              />
+            </div>
+          </div>
+
+          {/* Due Time (Jam Deadline) */}
+          <div className="w-full max-w-full min-w-0 sm:col-span-1 lg:col-span-2 relative">
+            <label htmlFor="todo-due-time" className="sr-only">
+              Jam Deadline
+            </label>
+            <div className="relative">
+              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-600">
+                <Clock className="w-4 h-4" />
+              </div>
+              <input
+                id="todo-due-time"
+                type="time"
+                value={dueTime}
+                onChange={(e) => {
+                  setDueTime(e.target.value);
+                  if (validationError) setValidationError('');
+                }}
+                disabled={isSubmitting || !dueDate}
+                className="w-full max-w-full min-w-0 pl-8 pr-2 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border-2 border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 cursor-pointer disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                title={dueDate ? 'Pilih jam deadline' : 'Pilih tanggal deadline terlebih dahulu'}
+              />
+            </div>
           </div>
 
           {/* Reminder Select (1 jam, 30 menit, 5 menit) */}
-          <div className="w-full max-w-full min-w-0 sm:col-span-1 lg:col-span-3 relative">
+          <div className="w-full max-w-full min-w-0 sm:col-span-1 lg:col-span-2 relative">
             <label htmlFor="todo-reminder" className="sr-only">
               Pengingat Notifikasi
             </label>
@@ -162,16 +217,16 @@ export default function TodoForm({ onAddTodo, isSubmitting }) {
                 value={reminder}
                 onChange={(e) => setReminder(e.target.value)}
                 disabled={isSubmitting}
-                className="w-full max-w-full min-w-0 appearance-none pl-8 pr-7 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border-2 border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 cursor-pointer"
+                className="w-full max-w-full min-w-0 appearance-none pl-8 pr-6 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border-2 border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-100 cursor-pointer"
                 title="Pilih kapan notifikasi deadline berbunyi"
               >
-                <option value="30m">Notif: 30 Menit</option>
+                <option value="30m">Notif: 30 Mnt</option>
                 <option value="1h">Notif: 1 Jam</option>
-                <option value="5m">Notif: 5 Menit</option>
-                <option value="none">Tanpa Notifikasi</option>
+                <option value="5m">Notif: 5 Mnt</option>
+                <option value="none">Tanpa Notif</option>
               </select>
               <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                   <path
                     fillRule="evenodd"
                     d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
@@ -183,7 +238,7 @@ export default function TodoForm({ onAddTodo, isSubmitting }) {
           </div>
 
           {/* Submit Button */}
-          <div className="w-full max-w-full min-w-0 sm:col-span-1 lg:col-span-2">
+          <div className="w-full max-w-full min-w-0 sm:col-span-2 lg:col-span-2">
             <button
               type="submit"
               disabled={isSubmitting || !title.trim()}
@@ -203,6 +258,39 @@ export default function TodoForm({ onAddTodo, isSubmitting }) {
             </button>
           </div>
         </div>
+
+        {/* Quick Jam Presets */}
+        {dueDate && (
+          <div className="flex items-center gap-1.5 flex-wrap pt-0.5 text-xs text-slate-600">
+            <span className="font-bold text-slate-500 text-[11px] flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5 text-indigo-500" />
+              Pilihan Jam Cepat:
+            </span>
+            {[
+              { label: '09:00 (Pagi)', val: '09:00' },
+              { label: '12:00 (Siang)', val: '12:00' },
+              { label: '17:00 (Sore)', val: '17:00' },
+              { label: '21:00 (Malam)', val: '21:00' },
+              { label: '23:59 (Akhir Hari)', val: '23:59' },
+            ].map((preset) => (
+              <button
+                key={preset.val}
+                type="button"
+                onClick={() => {
+                  setDueTime(preset.val);
+                  if (validationError) setValidationError('');
+                }}
+                className={`px-2 py-0.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
+                  dueTime === preset.val
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </form>
   );

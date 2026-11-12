@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Edit3, Loader2, AlertCircle, Bell } from 'lucide-react';
+import { X, Edit3, Loader2, AlertCircle, Bell, Calendar, Clock } from 'lucide-react';
+import { parseLocalDate, getMinDateString } from '../utils/todoHelpers';
 
 const PRIORITY_OPTIONS = [
   { value: 'low', label: 'Low (Santai)' },
@@ -17,6 +18,7 @@ export default function EditModal({
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState('medium');
   const [dueDate, setDueDate] = useState('');
+  const [dueTime, setDueTime] = useState('');
   const [reminder, setReminder] = useState('30m');
   const [validationError, setValidationError] = useState('');
 
@@ -24,7 +26,19 @@ export default function EditModal({
     if (todo) {
       setTitle(todo.title || '');
       setPriority(todo.priority || 'medium');
-      setDueDate(todo.due_date || '');
+      if (todo.due_date) {
+        if (todo.due_date.includes('T')) {
+          const [d, t] = todo.due_date.split('T');
+          setDueDate(d);
+          setDueTime(t);
+        } else {
+          setDueDate(todo.due_date);
+          setDueTime('23:59');
+        }
+      } else {
+        setDueDate('');
+        setDueTime('');
+      }
       setReminder(todo.reminder || '30m');
       setValidationError('');
     }
@@ -40,11 +54,28 @@ export default function EditModal({
       return;
     }
 
+    // Validasi & gabungkan tanggal + jam
+    let finalDueDate = '';
+    if (dueDate) {
+      const timePart = dueTime || '23:59';
+      finalDueDate = `${dueDate}T${timePart}`;
+      if (finalDueDate !== todo.due_date) {
+        const parsed = parseLocalDate(finalDueDate);
+        if (parsed) {
+          const now = new Date();
+          if (parsed.getTime() < now.getTime() - 60000) {
+            setValidationError('Tenggat waktu tidak boleh tanggal atau jam yang sudah lewat!');
+            return;
+          }
+        }
+      }
+    }
+
     setValidationError('');
     const success = await onUpdateTodo(todo.id, {
       title: trimmedTitle,
       priority,
-      due_date: dueDate,
+      due_date: finalDueDate,
       reminder,
     });
     if (success) {
@@ -111,6 +142,7 @@ export default function EditModal({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            {/* Prioritas */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Prioritas
@@ -128,19 +160,8 @@ export default function EditModal({
               </select>
             </div>
 
+            {/* Pengingat Notifikasi */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Deadline (Due Date & Jam)
-              </label>
-              <input
-                type="datetime-local"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                 Pengingat Notifikasi
               </label>
@@ -151,15 +172,89 @@ export default function EditModal({
                 <select
                   value={reminder}
                   onChange={(e) => setReminder(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                  className="w-full pl-8 pr-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
                 >
-                  <option value="30m">🔔 30 Menit sebelum deadline (Standar)</option>
-                  <option value="1h">🔔 1 Jam sebelum deadline</option>
-                  <option value="5m">🔔 5 Menit sebelum deadline (Segera)</option>
+                  <option value="30m">🔔 30 Menit (Standar)</option>
+                  <option value="1h">🔔 1 Jam sebelumnya</option>
+                  <option value="5m">🔔 5 Menit (Segera)</option>
                   <option value="none">🔕 Tanpa Notifikasi</option>
                 </select>
               </div>
             </div>
+
+            {/* Tanggal Deadline */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Tanggal Deadline</span>
+              </label>
+              <input
+                type="date"
+                value={dueDate}
+                min={getMinDateString()}
+                onChange={(e) => {
+                  setDueDate(e.target.value);
+                  if (!dueTime && e.target.value) {
+                    setDueTime('23:59');
+                  }
+                  if (validationError) setValidationError('');
+                }}
+                className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+                title="Pilih tanggal deadline"
+              />
+            </div>
+
+            {/* Jam Deadline */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Jam Deadline (Waktu)</span>
+              </label>
+              <input
+                type="time"
+                value={dueTime}
+                onChange={(e) => {
+                  setDueTime(e.target.value);
+                  if (validationError) setValidationError('');
+                }}
+                disabled={!dueDate}
+                className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer disabled:opacity-50 disabled:bg-slate-100"
+                title={dueDate ? 'Pilih jam deadline' : 'Pilih tanggal terlebih dahulu'}
+              />
+            </div>
+
+            {/* Pilihan Jam Cepat Presets */}
+            {dueDate && (
+              <div className="sm:col-span-2 pt-1 flex items-center gap-1.5 flex-wrap text-xs">
+                <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-indigo-500" />
+                  Preset Jam:
+                </span>
+                {[
+                  { label: '09:00', val: '09:00' },
+                  { label: '12:00', val: '12:00' },
+                  { label: '17:00', val: '17:00' },
+                  { label: '21:00', val: '21:00' },
+                  { label: '23:59', val: '23:59' },
+                ].map((preset) => (
+                  <button
+                    key={preset.val}
+                    type="button"
+                    onClick={() => {
+                      setDueTime(preset.val);
+                      if (validationError) setValidationError('');
+                    }}
+                    className={`px-2 py-0.5 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer ${
+                      dueTime === preset.val
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">

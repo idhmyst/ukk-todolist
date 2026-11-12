@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -58,11 +59,34 @@ func CreateTodo(c *gin.Context) {
 		reminder = "30m"
 	}
 
+	dueDate := strings.TrimSpace(input.DueDate)
+	if dueDate != "" {
+		var targetTime time.Time
+		var parseErr error
+		if strings.Contains(dueDate, "T") {
+			targetTime, parseErr = time.ParseInLocation("2006-01-02T15:04", dueDate, time.Local)
+		} else {
+			targetTime, parseErr = time.ParseInLocation("2006-01-02", dueDate, time.Local)
+			if parseErr == nil {
+				targetTime = time.Date(targetTime.Year(), targetTime.Month(), targetTime.Day(), 23, 59, 59, 0, time.Local)
+			}
+		}
+
+		if parseErr == nil {
+			if targetTime.Before(time.Now().Add(-1 * time.Minute)) {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": "Tenggat waktu (deadline) tidak boleh tanggal yang sudah lewat atau hari kemarin",
+				})
+				return
+			}
+		}
+	}
+
 	todo := models.Todo{
 		Title:       trimmedTitle,
 		Priority:    priority,
 		IsCompleted: false,
-		DueDate:     strings.TrimSpace(input.DueDate),
+		DueDate:     dueDate,
 		Reminder:    reminder,
 	}
 
@@ -118,7 +142,29 @@ func UpdateTodo(c *gin.Context) {
 	}
 
 	if input.DueDate != nil {
-		updates["due_date"] = strings.TrimSpace(*input.DueDate)
+		newDueDate := strings.TrimSpace(*input.DueDate)
+		if newDueDate != "" && newDueDate != todo.DueDate {
+			var targetTime time.Time
+			var parseErr error
+			if strings.Contains(newDueDate, "T") {
+				targetTime, parseErr = time.ParseInLocation("2006-01-02T15:04", newDueDate, time.Local)
+			} else {
+				targetTime, parseErr = time.ParseInLocation("2006-01-02", newDueDate, time.Local)
+				if parseErr == nil {
+					targetTime = time.Date(targetTime.Year(), targetTime.Month(), targetTime.Day(), 23, 59, 59, 0, time.Local)
+				}
+			}
+
+			if parseErr == nil {
+				if targetTime.Before(time.Now().Add(-1 * time.Minute)) {
+					c.JSON(http.StatusBadRequest, gin.H{
+						"error": "Tenggat waktu (deadline) tidak boleh tanggal yang sudah lewat atau hari kemarin",
+					})
+					return
+				}
+			}
+		}
+		updates["due_date"] = newDueDate
 	}
 
 	if input.IsCompleted != nil {
