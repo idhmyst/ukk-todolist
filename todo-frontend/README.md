@@ -375,10 +375,14 @@ const handleToggleStatus = async (id, nextStatus) => {
    * **Dua Cara Akses**:
      1. Klik tombol **Widget Desktop** di Navbar utama untuk pratinjau di layar atau membuka jendela melayang terpisah.
      2. Jalankan file `buka-widget-desktop.bat` untuk membukanya sebagai widget desktop Windows tanpa border browser (*frameless app*).
-9. **Pengaturan Batas Waktu Terpadu (Unified Date & Time Capsule)**:
-   * Menggabungkan tanggal dan jam deadline ke dalam satu kapsul elegan `[ 📅 mm/dd/yyyy | 🕒 23:59 (✕) ]`.
-   * Dilengkapi tombol pintas **Pilihan Jam Cepat (*Quick Presets*)**: `09:00 (Pagi)`, `12:00 (Siang)`, `17:00 (Sore)`, `21:00 (Malam)`, dan `23:59 (Akhir Hari)`.
-   * Tombol `(✕)` instan untuk mereset/menghapus batas waktu jika tugas tidak memiliki deadline.
+9. **Pengaturan Batas Waktu Terpadu & Validasi Wajib (Mandatory Deadline Enforcement)**:
+   * **Deadline Wajib (Mandatory)**: Setiap tugas baru maupun edit tugas **wajib** memiliki tanggal (hari) dan jam deadline. Pengguna tidak dapat menambahkan tugas tanpa menentukan tenggat waktu terlebih dahulu.
+   * **Validasi 3 Lapis Terpadu**:
+     1. *HTML5 Native Validation*: Atribut `required` pada input tanggal dan jam yang langsung memunculkan tooltip peringatan peramban jika belum ditentukan.
+     2. *Frontend Runtime Guard*: Validasi form di `handleSubmit` (`TodoForm.jsx` & `EditModal.jsx`) yang memunculkan pesan peringatan interaktif merah (*"Harap tentukan tanggal (hari) deadline tugas terlebih dahulu!"* / *"Harap tentukan jam deadline tugas terlebih dahulu!"*) dan membuat kapsul input menyala merah (`border-rose-400 ring-4 ring-rose-100`).
+     3. *Backend REST API Guard*: Controller Golang Gin (`CreateTodo` & `UpdateTodo`) memvalidasi `due_date != ""` dan mengembalikan status HTTP `400 Bad Request` jika batas waktu tidak disertakan.
+   * **Pilihan Jam Cepat Pintar (Smart Quick Presets)**: Tombol jalan pintas `09:00 (Pagi)`, `12:00 (Siang)`, `17:00 (Sore)`, `21:00 (Malam)`, dan `23:59 (Akhir Hari)` yang selalu dapat diklik; jika tanggal belum ditentukan, mengeklik preset otomatis memilih tanggal hari ini sehingga menentukan batas waktu hanya membutuhkan 1 kali klik!
+   * Kapsul input terpadu rapi: `[ 📅 mm/dd/yyyy | 🕒 23:59 (✕) ]`.
 10. **Proteksi Berlapis Anti-Tanggal Lampau (Hari Kemarin Terkunci)**:
    * **Di Sisi UI**: Atribut `min={getMinDateString()}` otomatis mengunci dan menonaktifkan (*disabled*) tanggal-tanggal kemarin di kalender browser agar pengguna tidak dapat mengkliknya.
    * **Di Sisi Validasi Runtime Frontend**: Jika pengguna memasukkan tanggal/jam lampau, muncul peringatan interaktif merah: *"Tenggat waktu tidak boleh tanggal atau jam yang sudah lewat!"*.
