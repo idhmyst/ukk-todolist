@@ -60,19 +60,27 @@ export default function TodoForm({ onAddTodo, isSubmitting, initialDate }) {
       return;
     }
 
-    // Format dan validasi tanggal & jam deadline
-    let finalDueDate = '';
-    if (dueDate) {
-      const timePart = dueTime || '23:59';
-      finalDueDate = `${dueDate}T${timePart}`;
-      const parsed = parseLocalDate(finalDueDate);
-      if (parsed) {
-        const now = new Date();
-        // Toleransi 1 menit
-        if (parsed.getTime() < now.getTime() - 60000) {
-          setValidationError('Tenggat waktu tidak boleh tanggal atau jam yang sudah lewat!');
-          return;
-        }
+    // 1. Validasi Tanggal (Hari) WAJIB
+    if (!dueDate) {
+      setValidationError('Harap tentukan tanggal (hari) deadline tugas terlebih dahulu!');
+      return;
+    }
+
+    // 2. Validasi Jam WAJIB
+    if (!dueTime) {
+      setValidationError('Harap tentukan jam deadline tugas terlebih dahulu!');
+      return;
+    }
+
+    // 3. Format dan validasi tanggal & jam deadline
+    const finalDueDate = `${dueDate}T${dueTime}`;
+    const parsed = parseLocalDate(finalDueDate);
+    if (parsed) {
+      const now = new Date();
+      // Toleransi 1 menit
+      if (parsed.getTime() < now.getTime() - 60000) {
+        setValidationError('Tenggat waktu tidak boleh tanggal atau jam yang sudah lewat!');
+        return;
       }
     }
 
@@ -164,14 +172,21 @@ export default function TodoForm({ onAddTodo, isSubmitting, initialDate }) {
               </div>
             </div>
 
-            {/* 2. Unified Deadline Pill (Tanggal & Jam tergabung rapi) */}
-            <div className="flex items-center rounded-xl border-2 border-slate-200 bg-white shadow-2xs hover:border-slate-300 focus-within:border-indigo-600 focus-within:ring-4 focus-within:ring-indigo-100 transition-all overflow-hidden max-w-full">
+            {/* 2. Unified Deadline Pill (Tanggal & Jam WAJIB diisi) */}
+            <div
+              className={`flex items-center rounded-xl border-2 bg-white shadow-2xs transition-all overflow-hidden max-w-full ${
+                validationError && (!dueDate || !dueTime)
+                  ? 'border-rose-400 ring-4 ring-rose-100'
+                  : 'border-slate-200 hover:border-slate-300 focus-within:border-indigo-600 focus-within:ring-4 focus-within:ring-indigo-100'
+              }`}
+            >
               {/* Tanggal */}
               <div className="flex items-center pl-2.5 pr-1.5 py-1.5">
                 <Calendar className="w-4 h-4 text-indigo-600 mr-1.5 flex-shrink-0" />
                 <input
                   id="todo-due-date"
                   type="date"
+                  required
                   value={dueDate}
                   min={getMinDateString()}
                   onChange={(e) => {
@@ -183,7 +198,7 @@ export default function TodoForm({ onAddTodo, isSubmitting, initialDate }) {
                   }}
                   disabled={isSubmitting}
                   className="text-xs sm:text-sm font-semibold text-slate-800 bg-transparent outline-none cursor-pointer py-1"
-                  title="Pilih tanggal deadline"
+                  title="Pilih tanggal deadline (Wajib diisi)"
                 />
               </div>
 
@@ -196,19 +211,20 @@ export default function TodoForm({ onAddTodo, isSubmitting, initialDate }) {
                 <input
                   id="todo-due-time"
                   type="time"
+                  required
                   value={dueTime}
                   onChange={(e) => {
                     setDueTime(e.target.value);
                     if (validationError) setValidationError('');
                   }}
-                  disabled={isSubmitting || !dueDate}
-                  className="text-xs sm:text-sm font-semibold text-slate-800 bg-transparent outline-none cursor-pointer py-1 disabled:opacity-40"
-                  title={dueDate ? 'Pilih jam deadline' : 'Pilih tanggal terlebih dahulu'}
+                  disabled={isSubmitting}
+                  className="text-xs sm:text-sm font-semibold text-slate-800 bg-transparent outline-none cursor-pointer py-1"
+                  title="Pilih jam deadline (Wajib diisi)"
                 />
               </div>
 
               {/* Tombol Clear Deadline */}
-              {dueDate && (
+              {(dueDate || dueTime) && (
                 <button
                   type="button"
                   onClick={() => {
@@ -275,37 +291,38 @@ export default function TodoForm({ onAddTodo, isSubmitting, initialDate }) {
         </div>
 
         {/* Quick Jam Presets */}
-        {dueDate && (
-          <div className="flex items-center gap-1.5 flex-wrap pt-1 text-xs text-slate-600">
-            <span className="font-bold text-slate-500 text-[11px] flex items-center gap-1 mr-0.5">
-              <Clock className="w-3.5 h-3.5 text-indigo-500" />
-              Pilihan Jam:
-            </span>
-            {[
-              { label: '09:00 (Pagi)', val: '09:00' },
-              { label: '12:00 (Siang)', val: '12:00' },
-              { label: '17:00 (Sore)', val: '17:00' },
-              { label: '21:00 (Malam)', val: '21:00' },
-              { label: '23:59 (Akhir Hari)', val: '23:59' },
-            ].map((preset) => (
-              <button
-                key={preset.val}
-                type="button"
-                onClick={() => {
-                  setDueTime(preset.val);
-                  if (validationError) setValidationError('');
-                }}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
-                  dueTime === preset.val
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="flex items-center gap-1.5 flex-wrap pt-1 text-xs text-slate-600">
+          <span className="font-bold text-slate-500 text-[11px] flex items-center gap-1 mr-0.5">
+            <Clock className="w-3.5 h-3.5 text-indigo-500" />
+            Pilihan Jam Cepat:
+          </span>
+          {[
+            { label: '09:00 (Pagi)', val: '09:00' },
+            { label: '12:00 (Siang)', val: '12:00' },
+            { label: '17:00 (Sore)', val: '17:00' },
+            { label: '21:00 (Malam)', val: '21:00' },
+            { label: '23:59 (Akhir Hari)', val: '23:59' },
+          ].map((preset) => (
+            <button
+              key={preset.val}
+              type="button"
+              onClick={() => {
+                if (!dueDate) {
+                  setDueDate(getMinDateString());
+                }
+                setDueTime(preset.val);
+                if (validationError) setValidationError('');
+              }}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
+                dueTime === preset.val
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                  : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
       </div>
     </form>
   );

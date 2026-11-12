@@ -54,19 +54,27 @@ export default function EditModal({
       return;
     }
 
-    // Validasi & gabungkan tanggal + jam
-    let finalDueDate = '';
-    if (dueDate) {
-      const timePart = dueTime || '23:59';
-      finalDueDate = `${dueDate}T${timePart}`;
-      if (finalDueDate !== todo.due_date) {
-        const parsed = parseLocalDate(finalDueDate);
-        if (parsed) {
-          const now = new Date();
-          if (parsed.getTime() < now.getTime() - 60000) {
-            setValidationError('Tenggat waktu tidak boleh tanggal atau jam yang sudah lewat!');
-            return;
-          }
+    // 1. Validasi Tanggal (Hari) WAJIB
+    if (!dueDate) {
+      setValidationError('Harap tentukan tanggal (hari) deadline tugas terlebih dahulu!');
+      return;
+    }
+
+    // 2. Validasi Jam WAJIB
+    if (!dueTime) {
+      setValidationError('Harap tentukan jam deadline tugas terlebih dahulu!');
+      return;
+    }
+
+    // 3. Validasi waktu tidak boleh masa lalu (jika diubah)
+    const finalDueDate = `${dueDate}T${dueTime}`;
+    if (finalDueDate !== todo.due_date) {
+      const parsed = parseLocalDate(finalDueDate);
+      if (parsed) {
+        const now = new Date();
+        if (parsed.getTime() < now.getTime() - 60000) {
+          setValidationError('Tenggat waktu tidak boleh tanggal atau jam yang sudah lewat!');
+          return;
         }
       }
     }
@@ -186,10 +194,11 @@ export default function EditModal({
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-indigo-500" />
-                <span>Tanggal Deadline</span>
+                <span>Tanggal Deadline <span className="text-rose-500">*</span></span>
               </label>
               <input
                 type="date"
+                required
                 value={dueDate}
                 min={getMinDateString()}
                 onChange={(e) => {
@@ -199,8 +208,12 @@ export default function EditModal({
                   }
                   if (validationError) setValidationError('');
                 }}
-                className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
-                title="Pilih tanggal deadline"
+                className={`w-full px-3 py-2 text-xs font-semibold rounded-xl border bg-white text-slate-800 focus:outline-none focus:ring-2 cursor-pointer transition-all ${
+                  validationError && !dueDate
+                    ? 'border-rose-400 ring-2 ring-rose-100'
+                    : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-500'
+                }`}
+                title="Pilih tanggal deadline (Wajib)"
               />
             </div>
 
@@ -208,53 +221,58 @@ export default function EditModal({
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5 text-indigo-500" />
-                <span>Jam Deadline (Waktu)</span>
+                <span>Jam Deadline <span className="text-rose-500">*</span></span>
               </label>
               <input
                 type="time"
+                required
                 value={dueTime}
                 onChange={(e) => {
                   setDueTime(e.target.value);
                   if (validationError) setValidationError('');
                 }}
-                disabled={!dueDate}
-                className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer disabled:opacity-50 disabled:bg-slate-100"
-                title={dueDate ? 'Pilih jam deadline' : 'Pilih tanggal terlebih dahulu'}
+                className={`w-full px-3 py-2 text-xs font-semibold rounded-xl border bg-white text-slate-800 focus:outline-none focus:ring-2 cursor-pointer transition-all ${
+                  validationError && !dueTime
+                    ? 'border-rose-400 ring-2 ring-rose-100'
+                    : 'border-slate-200 focus:ring-indigo-500/20 focus:border-indigo-500'
+                }`}
+                title="Pilih jam deadline (Wajib)"
               />
             </div>
 
             {/* Pilihan Jam Cepat Presets */}
-            {dueDate && (
-              <div className="sm:col-span-2 pt-1 flex items-center gap-1.5 flex-wrap text-xs">
-                <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-indigo-500" />
-                  Preset Jam:
-                </span>
-                {[
-                  { label: '09:00', val: '09:00' },
-                  { label: '12:00', val: '12:00' },
-                  { label: '17:00', val: '17:00' },
-                  { label: '21:00', val: '21:00' },
-                  { label: '23:59', val: '23:59' },
-                ].map((preset) => (
-                  <button
-                    key={preset.val}
-                    type="button"
-                    onClick={() => {
-                      setDueTime(preset.val);
-                      if (validationError) setValidationError('');
-                    }}
-                    className={`px-2 py-0.5 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer ${
-                      dueTime === preset.val
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="sm:col-span-2 pt-1 flex items-center gap-1.5 flex-wrap text-xs">
+              <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
+                <Clock className="w-3 h-3 text-indigo-500" />
+                Preset Jam:
+              </span>
+              {[
+                { label: '09:00', val: '09:00' },
+                { label: '12:00', val: '12:00' },
+                { label: '17:00', val: '17:00' },
+                { label: '21:00', val: '21:00' },
+                { label: '23:59', val: '23:59' },
+              ].map((preset) => (
+                <button
+                  key={preset.val}
+                  type="button"
+                  onClick={() => {
+                    if (!dueDate) {
+                      setDueDate(getMinDateString());
+                    }
+                    setDueTime(preset.val);
+                    if (validationError) setValidationError('');
+                  }}
+                  className={`px-2 py-0.5 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer ${
+                    dueTime === preset.val
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">

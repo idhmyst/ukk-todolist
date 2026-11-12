@@ -132,10 +132,17 @@ export default function AiAssistant({
     if (addedTodoIds.has(key)) return;
 
     if (onAddTodo) {
+      // Pastikan due_date selalu terisi sesuai aturan sistem
+      let finalDueDate = todoItem.due_date || '';
+      if (!finalDueDate) {
+        const today = new Date().toISOString().split('T')[0];
+        finalDueDate = `${today}T23:59`;
+      }
+
       const success = await onAddTodo(
         todoItem.title,
         todoItem.priority || 'medium',
-        todoItem.due_date || '',
+        finalDueDate,
         todoItem.reminder || '30m'
       );
       if (success) {

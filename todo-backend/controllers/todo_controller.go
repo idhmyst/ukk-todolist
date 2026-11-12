@@ -60,25 +60,30 @@ func CreateTodo(c *gin.Context) {
 	}
 
 	dueDate := strings.TrimSpace(input.DueDate)
-	if dueDate != "" {
-		var targetTime time.Time
-		var parseErr error
-		if strings.Contains(dueDate, "T") {
-			targetTime, parseErr = time.ParseInLocation("2006-01-02T15:04", dueDate, time.Local)
-		} else {
-			targetTime, parseErr = time.ParseInLocation("2006-01-02", dueDate, time.Local)
-			if parseErr == nil {
-				targetTime = time.Date(targetTime.Year(), targetTime.Month(), targetTime.Day(), 23, 59, 59, 0, time.Local)
-			}
-		}
+	if dueDate == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Tenggat waktu (tanggal dan jam) wajib ditentukan terlebih dahulu",
+		})
+		return
+	}
 
+	var targetTime time.Time
+	var parseErr error
+	if strings.Contains(dueDate, "T") {
+		targetTime, parseErr = time.ParseInLocation("2006-01-02T15:04", dueDate, time.Local)
+	} else {
+		targetTime, parseErr = time.ParseInLocation("2006-01-02", dueDate, time.Local)
 		if parseErr == nil {
-			if targetTime.Before(time.Now().Add(-1 * time.Minute)) {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": "Tenggat waktu (deadline) tidak boleh tanggal yang sudah lewat atau hari kemarin",
-				})
-				return
-			}
+			targetTime = time.Date(targetTime.Year(), targetTime.Month(), targetTime.Day(), 23, 59, 59, 0, time.Local)
+		}
+	}
+
+	if parseErr == nil {
+		if targetTime.Before(time.Now().Add(-1 * time.Minute)) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Tenggat waktu (deadline) tidak boleh tanggal yang sudah lewat atau hari kemarin",
+			})
+			return
 		}
 	}
 
@@ -143,6 +148,12 @@ func UpdateTodo(c *gin.Context) {
 
 	if input.DueDate != nil {
 		newDueDate := strings.TrimSpace(*input.DueDate)
+		if input.Title != nil && newDueDate == "" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Tenggat waktu (tanggal dan jam) wajib ditentukan terlebih dahulu",
+			})
+			return
+		}
 		if newDueDate != "" && newDueDate != todo.DueDate {
 			var targetTime time.Time
 			var parseErr error
