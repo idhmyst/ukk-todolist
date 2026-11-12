@@ -2,7 +2,7 @@
 
 Backend REST API untuk aplikasi **To-Do List** yang dibangun khusus untuk kebutuhan penilaian Uji Kompetensi Keahlian (**UKK**) Program Keahlian Pengembangan Perangkat Lunak dan GIM (**PPLG**).
 
-Aplikasi ini dirancang dengan arsitektur modular, bersih (*clean code*), dan siap dikonsumsi langsung oleh frontend **React** (port `5173`).
+Aplikasi ini dirancang dengan arsitektur modular, bersih (*clean code*), siap dikonsumsi langsung oleh frontend **React** (port `5173`/`5174`), dan **mendukung fleksibilitas database**: baik **MySQL Lokal (Laragon)** maupun **Cloud Database Online (TiDB Cloud / Aiven / Railway)** via environment variable `.env`.
 
 ---
 
@@ -12,7 +12,8 @@ Aplikasi ini dirancang dengan arsitektur modular, bersih (*clean code*), dan sia
 - **Web Framework**: [Gin Gonic](https://github.com/gin-gonic/gin)
 - **Object-Relational Mapping (ORM)**: [GORM](https://gorm.io/)
 - **Database Driver**: [GORM MySQL Driver](https://github.com/go-gorm/mysql)
-- **Database Server**: MySQL lokal via [Laragon](https://laragon.org/)
+- **Database Server**: MySQL Lokal (Laragon) atau Cloud Database MySQL (TiDB Cloud / Aiven)
+- **Environment Manager**: [godotenv](https://github.com/joho/godotenv)
 - **CORS Middleware**: [gin-contrib/cors](https://github.com/gin-contrib/cors)
 
 ---
@@ -22,17 +23,75 @@ Aplikasi ini dirancang dengan arsitektur modular, bersih (*clean code*), dan sia
 ```text
 todo-backend/
 ├── config/
-│   └── database.go          # Konfigurasi koneksi MySQL Laragon & Auto-Migration
+│   └── database.go          # Koneksi Database (Lokal / Cloud) & Auto-Migration
 ├── controllers/
 │   └── todo_controller.go   # Handler logika bisnis CRUD (Get, Create, Update, Delete)
 ├── models/
 │   └── todo.go              # Definisi struct Todo & DTO validasi request
+├── .env                     # File konfigurasi kredensial (lokal/cloud)
+├── .env.example             # Template contoh konfigurasi environment
+├── .gitignore               # Konfigurasi file yang diabaikan Git
 ├── go.mod                   # Deklarasi modul dan versi dependensi Go
 ├── go.sum                   # Checksum dependensi Go untuk integritas build
 ├── main.go                  # Entrypoint: setup Gin, CORS, Routing, dan Server Runner
-├── .gitignore               # Konfigurasi file yang diabaikan Git
-└── README.md                # Dokumentasi lengkap proyek
+└── README.md                # Dokumentasi teknis backend
 ```
+
+---
+
+## ☁️ Konfigurasi Database: Cloud vs Lokal
+
+Backend ini telah dilengkapi sistem pemuatan konfigurasi dinamis melalui file **`.env`**. Anda bebas memilih ingin menggunakan **Database Online (Cloud)** atau **Database Lokal (Laragon)** tanpa mengubah kode Go satu baris pun!
+
+### Opsi 1: Menggunakan Cloud Database Online (Direkomendasikan)
+Cocok jika Anda ingin aplikasi bisa diakses dari mana saja tanpa perlu menyalakan Laragon lokal di laptop.
+
+Rekomendasi layanan gratis terbaik: **[TiDB Cloud](https://tidbcloud.com)**
+- 100% kompatibel dengan MySQL & GORM
+- Gratis 5 GB selamanya (tanpa perlu kartu kredit)
+- Setup instan dalam 1 menit
+
+**Langkah Setup TiDB Cloud:**
+1. Daftar akun di [https://tidbcloud.com](https://tidbcloud.com).
+2. Buat cluster bertipe **Serverless** (pilih region terdekat, misalnya *Singapore*).
+3. Setelah cluster aktif, klik **Connect**, buat password, dan catat: **Host**, **Port**, **User**, dan **Password**.
+4. Buka file `.env` di folder `todo-backend` dan sesuaikan nilainya:
+
+```env
+# Konfigurasi Cloud Database (TiDB Cloud)
+DB_HOST=gateway01.ap-southeast-1.prod.aws.tidbcloud.com
+DB_PORT=4000
+DB_USER=2xxxxxx.root
+DB_PASSWORD=password_tidb_anda
+DB_NAME=test
+DB_SSL=true
+
+PORT=8080
+```
+> **Catatan SSL**: Untuk database cloud, pastikan opsi `DB_SSL=true` aktif karena cloud provider mewajibkan enkripsi TLS/SSL.
+
+---
+
+### Opsi 2: Menggunakan Database Lokal (Laragon)
+Jika Anda ingin tetap menjalankan database secara offline di komputer lokal:
+
+1. Buka aplikasi **Laragon** dan klik **Start All**.
+2. Pastikan file `.env` berisi konfigurasi lokal:
+
+```env
+# Konfigurasi Database Lokal Laragon
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=todo_db
+DB_SSL=false
+
+PORT=8080
+```
+
+> **Fitur Auto-Create Database Lokal**:
+> Jika memilih host lokal (`127.0.0.1` / `localhost`), aplikasi akan secara otomatis membuat database `todo_db` jika belum ada di Laragon Anda.
 
 ---
 
@@ -46,42 +105,31 @@ Model `Todo` dipetakan ke tabel `todos` di database MySQL:
 | `title` | `string` | `VARCHAR(255) NOT NULL` | Judul tugas (wajib diisi) |
 | `priority` | `string` | `VARCHAR(10) DEFAULT 'medium'` | Tingkat urgensi: `low`, `medium`, `high` |
 | `is_completed`| `bool` | `TINYINT(1) DEFAULT 0` | Status selesai tugas (`false` / `true`) |
-| `due_date` | `string` | `VARCHAR(50)` | Tanggal deadline (opsional / nullable) |
+| `due_date` | `string` | `VARCHAR(50)` | Tanggal deadline tugas (opsional / nullable) |
 | `created_at` | `time.Time` | `DATETIME` | Waktu tugas dibuat |
 | `updated_at` | `time.Time` | `DATETIME` | Waktu tugas terakhir diubah |
 
-> **Fitur Auto-Create & Auto-Migrate**:
-> Skrip di `config/database.go` secara otomatis membuat database `todo_db` (jika belum ada) dan melakukan migrasi skema tabel `todos` saat aplikasi pertama kali dijalankan.
-
----
-
-## ⚙️ Persyaratan Sistem
-
-1. **Golang**: Versi `1.20` atau yang lebih baru terinstal di sistem.
-2. **Laragon / XAMPP**: Web server lokal dengan MySQL aktif di port `3306`.
-   - Host: `127.0.0.1`
-   - Port: `3306`
-   - User: `root`
-   - Password: `""` (kosong)
-   - Database: `todo_db`
+> **Fitur Auto-Migration**:
+> GORM akan secara otomatis membuatkan atau memperbarui skema tabel `todos` baik di database cloud maupun lokal setiap kali aplikasi dijalankan.
 
 ---
 
 ## 🛠️ Panduan Instalasi & Menjalankan
 
-### 1. Pastikan MySQL Laragon Berjalan
-Buka aplikasi **Laragon** di komputer Anda, lalu klik tombol **Start All** hingga status Apache & MySQL berubah menjadi aktif (*Running*).
-
-### 2. Buka Terminal pada Folder Proyek
-Navigasikan terminal ke folder `todo-backend`:
+### 1. Buka Terminal pada Folder Proyek
 ```powershell
 cd d:\TELKOM\ukk-todolist\todo-backend
 ```
 
-### 3. Inisialisasi & Unduh Dependensi
+### 2. Buat File Konfigurasi `.env`
+Salin dari template `.env.example` jika belum ada file `.env`:
 ```powershell
-go mod init todo-backend
-go get github.com/gin-gonic/gin github.com/gin-contrib/cors@v1.7.2 gorm.io/gorm gorm.io/driver/mysql
+cp .env.example .env
+```
+Sesuaikan kredensial database Anda (Cloud TiDB atau Lokal Laragon) di dalam file `.env`.
+
+### 3. Unduh Dependensi Modul
+```powershell
 go mod tidy
 ```
 
@@ -92,9 +140,9 @@ go run main.go
 
 Jika berhasil, terminal akan menampilkan output:
 ```text
-🔄 Menjalankan Auto Migration...
-✅ Koneksi database MySQL Laragon berhasil & skema tabel siap digunakan!
-[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+🔌 Menghubungkan ke database...
+🔄 Menjalankan Auto Migration skema tabel...
+✅ Berhasil terhubung ke database & skema tabel siap digunakan!
 🚀 Server To-Do REST API berjalan di http://localhost:8080
 ```
 
@@ -105,7 +153,6 @@ Jika berhasil, terminal akan menampilkan output:
 Base URL: `http://localhost:8080`
 
 ### 1. Health Check
-Memeriksa status aktif server backend.
 - **Method**: `GET`
 - **URL**: `/`
 - **Response `200 OK`**:
@@ -119,7 +166,6 @@ Memeriksa status aktif server backend.
 ---
 
 ### 2. Mengambil Semua To-Do
-Mengambil daftar seluruh to-do yang diurutkan dari ID terbesar/terbaru (`id` descending).
 - **Method**: `GET`
 - **URL**: `/api/todos`
 - **Response `200 OK`**:
@@ -131,9 +177,9 @@ Mengambil daftar seluruh to-do yang diurutkan dari ID terbesar/terbaru (`id` des
       "title": "Membuat Desain UI Frontend",
       "priority": "high",
       "is_completed": false,
-      "due_date": "2026-11-10",
-      "created_at": "2026-11-03T07:20:00+07:00",
-      "updated_at": "2026-11-03T07:20:00+07:00"
+      "due_date": "2026-11-20",
+      "created_at": "2026-11-12T07:15:00+07:00",
+      "updated_at": "2026-11-12T07:15:00+07:00"
     }
   ]
 }
@@ -142,7 +188,6 @@ Mengambil daftar seluruh to-do yang diurutkan dari ID terbesar/terbaru (`id` des
 ---
 
 ### 3. Menambahkan To-Do Baru
-Menambahkan catatan to-do baru ke database.
 - **Method**: `POST`
 - **URL**: `/api/todos`
 - **Header**: `Content-Type: application/json`
@@ -151,11 +196,9 @@ Menambahkan catatan to-do baru ke database.
 {
   "title": "Belajar React dan Golang",
   "priority": "high",
-  "due_date": "2026-11-05"
+  "due_date": "2026-11-25"
 }
 ```
-*Catatan: `priority` bersifat opsional (default: `'medium'`). `due_date` bersifat opsional.*
-
 - **Response `201 Created`**:
 ```json
 {
@@ -164,39 +207,25 @@ Menambahkan catatan to-do baru ke database.
     "title": "Belajar React dan Golang",
     "priority": "high",
     "is_completed": false,
-    "due_date": "2026-11-05",
-    "created_at": "2026-11-03T07:21:00+07:00",
-    "updated_at": "2026-11-03T07:21:00+07:00"
+    "due_date": "2026-11-25",
+    "created_at": "2026-11-12T07:16:00+07:00",
+    "updated_at": "2026-11-12T07:16:00+07:00"
   }
-}
-```
-- **Response `400 Bad Request`** (jika `title` kosong):
-```json
-{
-  "error": "Field 'title' wajib diisi"
 }
 ```
 
 ---
 
 ### 4. Mengubah To-Do
-Mengubah judul, prioritas, deadline (`due_date`), atau status selesai (`is_completed`) berdasarkan ID.
 - **Method**: `PUT`
 - **URL**: `/api/todos/:id`
 - **Header**: `Content-Type: application/json`
-- **Request Body (Contoh Update Status Selesai)**:
+- **Request Body**:
 ```json
 {
-  "is_completed": true
-}
-```
-- **Request Body (Contoh Update Data Lengkap)**:
-```json
-{
-  "title": "Belajar React, Golang, dan Docker",
-  "priority": "high",
-  "due_date": "2026-11-15",
-  "is_completed": true
+  "is_completed": true,
+  "title": "Belajar React, Golang, dan Cloud DB",
+  "priority": "high"
 }
 ```
 - **Response `200 OK`**:
@@ -204,26 +233,19 @@ Mengubah judul, prioritas, deadline (`due_date`), atau status selesai (`is_compl
 {
   "data": {
     "id": 2,
-    "title": "Belajar React, Golang, dan Docker",
+    "title": "Belajar React, Golang, dan Cloud DB",
     "priority": "high",
     "is_completed": true,
-    "due_date": "2026-11-15",
-    "created_at": "2026-11-03T07:21:00+07:00",
-    "updated_at": "2026-11-03T07:22:15+07:00"
+    "due_date": "2026-11-25",
+    "created_at": "2026-11-12T07:16:00+07:00",
+    "updated_at": "2026-11-12T07:17:30+07:00"
   }
-}
-```
-- **Response `404 Not Found`** (jika ID tidak ditemukan):
-```json
-{
-  "error": "To-do dengan ID 999 tidak ditemukan"
 }
 ```
 
 ---
 
 ### 5. Menghapus To-Do
-Menghapus to-do berdasarkan ID.
 - **Method**: `DELETE`
 - **URL**: `/api/todos/:id`
 - **Response `200 OK`**:
@@ -232,41 +254,19 @@ Menghapus to-do berdasarkan ID.
   "message": "To-do berhasil dihapus"
 }
 ```
-- **Response `404 Not Found`** (jika ID tidak ditemukan):
-```json
-{
-  "error": "To-do dengan ID 999 tidak ditemukan"
-}
-```
 
 ---
 
-## 🔒 Konfigurasi CORS (Cross-Origin Resource Sharing)
-
-Backend telah dilengkapi middleware CORS menggunakan `github.com/gin-contrib/cors` dengan spesifikasi:
-- **Allowed Origin**: `http://localhost:5173` (Frontend React Vite)
-- **Allowed Methods**: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`
-- **Allowed Headers**: `Origin`, `Content-Type`, `Accept`, `Authorization`, `X-Requested-With`
-- **Allow Credentials**: `true`
+## 🔒 Konfigurasi CORS
+Backend mengizinkan origin frontend React di:
+- `http://localhost:5173`
+- `http://localhost:5174`
+- `http://127.0.0.1:5173`
+- `http://127.0.0.1:5174`
+- Allowed Methods: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`
 
 ---
 
-## 🧪 Contoh Pengujian API (cURL)
-
-```bash
-# 1. Tambah Tugas Baru dengan Due Date
-curl -X POST http://localhost:8080/api/todos \
-  -H "Content-Type: application/json" \
-  -d "{\"title\":\"Selesaikan Proyek UKK PPLG\",\"priority\":\"high\",\"due_date\":\"2026-11-10\"}"
-
-# 2. Ambil Semua Daftar Tugas
-curl http://localhost:8080/api/todos
-
-# 3. Ubah Status Tugas Menjadi Selesai (ID 1)
-curl -X PUT http://localhost:8080/api/todos/1 \
-  -H "Content-Type: application/json" \
-  -d "{\"is_completed\":true}"
-
-# 4. Hapus Tugas (ID 1)
-curl -X DELETE http://localhost:8080/api/todos/1
-```
+## 👨‍💻 Penulis
+Dibuat untuk kebutuhan Penilaian Uji Kompetensi Keahlian (**UKK**) — **PPLG SMK**.
+Semoga sukses dalam ujian UKK! 🎉

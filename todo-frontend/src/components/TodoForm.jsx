@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { Plus, Loader2, Sparkles, AlertCircle, Bell } from 'lucide-react';
 
 const PRIORITY_OPTIONS = [
   {
@@ -29,6 +29,7 @@ export default function TodoForm({ onAddTodo, isSubmitting }) {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState('medium');
   const [dueDate, setDueDate] = useState('');
+  const [reminder, setReminder] = useState('30m');
   const [validationError, setValidationError] = useState('');
 
   const handleSubmit = async (e) => {
@@ -41,11 +42,12 @@ export default function TodoForm({ onAddTodo, isSubmitting }) {
     }
 
     setValidationError('');
-    const success = await onAddTodo(trimmedTitle, priority, dueDate);
+    const success = await onAddTodo(trimmedTitle, priority, dueDate, reminder);
     if (success) {
       setTitle('');
       setPriority('medium');
       setDueDate('');
+      setReminder('30m');
     }
   };
 

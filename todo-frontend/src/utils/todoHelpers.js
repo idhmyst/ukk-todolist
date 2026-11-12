@@ -12,23 +12,40 @@ export const PRIORITY_WEIGHT = {
 /**
  * Parsing tanggal lokal format YYYY-MM-DD secara aman tanpa time-shift zona waktu
  */
+/**
+ * Parsing tanggal & waktu lokal secara aman tanpa time-shift zona waktu.
+ * Mendukung format YYYY-MM-DD dan YYYY-MM-DDTHH:mm.
+ */
 export function parseLocalDate(dateStr) {
   if (!dateStr) return null;
-  const parts = String(dateStr).split('-');
+  const str = String(dateStr).trim();
+
+  // Jika menyertakan jam:menit (format input datetime-local)
+  if (str.includes('T')) {
+    const [datePart, timePart] = str.split('T');
+    const [y, m, d] = datePart.split('-').map((v) => parseInt(v, 10));
+    const [hr, min] = timePart.split(':').map((v) => parseInt(v, 10));
+    if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+      return new Date(y, m - 1, d, hr || 0, min || 0, 0);
+    }
+  }
+
+  // Jika hanya tanggal (YYYY-MM-DD), set batas akhir hari jam 23:59:59
+  const parts = str.split('-');
   if (parts.length === 3) {
     const y = parseInt(parts[0], 10);
     const m = parseInt(parts[1], 10) - 1;
     const d = parseInt(parts[2], 10);
     if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
-      return new Date(y, m, d);
+      return new Date(y, m, d, 23, 59, 59);
     }
   }
-  const fallback = new Date(dateStr);
+  const fallback = new Date(str);
   return isNaN(fallback.getTime()) ? null : fallback;
 }
 
 /**
- * Menghitung selisih hari dan metadata urgensi tenggat waktu
+ * Menghitung selisih waktu, menit, hari dan metadata urgensi tenggat waktu
  */
 export function getDeadlineInfo(dueDateStr) {
   if (!dueDateStr) return null;
@@ -41,16 +58,27 @@ export function getDeadlineInfo(dueDateStr) {
 
   const msPerDay = 1000 * 60 * 60 * 24;
   const diffDays = Math.round((targetDay.getTime() - today.getTime()) / msPerDay);
+  const diffMinutes = Math.round((dueDate.getTime() - now.getTime()) / (1000 * 60));
 
-  const formattedDate = new Intl.DateTimeFormat('id-ID', {
+  const hasTime = String(dueDateStr).includes('T');
+  const dayFormatted = new Intl.DateTimeFormat('id-ID', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   }).format(dueDate);
 
+  const timeFormatted = hasTime
+    ? dueDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+    : '';
+
+  const formattedDate = hasTime ? `${dayFormatted}, ${timeFormatted}` : dayFormatted;
+
   return {
     diffDays,
-    isOverdue: diffDays < 0,
+    diffMinutes,
+    hasTime,
+    timeFormatted,
+    isOverdue: dueDate.getTime() < now.getTime(),
     isToday: diffDays === 0,
     isTomorrow: diffDays === 1,
     isApproaching: diffDays > 1 && diffDays <= 3,
@@ -59,18 +87,29 @@ export function getDeadlineInfo(dueDateStr) {
 }
 
 /**
- * Format tanggal umum Indonesia (misal: 3 Nov 2026)
+ * Format tanggal & jam umum Indonesia (misal: 12 Nov 2026, 14:30)
  */
 export function formatIndonesianDate(dateString) {
   if (!dateString) return '';
   try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-    return new Intl.DateTimeFormat('id-ID', {
+    const date = parseLocalDate(dateString);
+    if (!date || isNaN(date.getTime())) return dateString;
+
+    const hasTime = String(dateString).includes('T');
+    const dayFormatted = new Intl.DateTimeFormat('id-ID', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
     }).format(date);
+
+    if (hasTime) {
+      const timeFormatted = date.toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      return `${dayFormatted}, ${timeFormatted}`;
+    }
+    return dayFormatted;
   } catch {
     return dateString;
   }

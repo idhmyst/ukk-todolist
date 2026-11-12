@@ -37,7 +37,9 @@ ukk-todolist/
 ## ⚡ Panduan Cepat Menjalankan Aplikasi
 
 ### 1. Prasyarat Sistem
-- **Laragon / XAMPP**: Pastikan MySQL berjalan di port `3306`.
+- **Database**: 
+  - **Opsi Cloud (Online)**: Menggunakan [TiDB Cloud](https://tidbcloud.com) (Gratis tanpa Laragon / XAMPP, atur di `todo-backend/.env`).
+  - **Opsi Lokal (Offline)**: Laragon / XAMPP dengan MySQL aktif di port `3306`.
 - **Golang**: Versi `1.20+` terpasang.
 - **Node.js**: Versi `18+` terpasang.
 
@@ -46,10 +48,12 @@ ukk-todolist/
 ### 2. Jalankan Backend (Terminal 1)
 ```powershell
 cd todo-backend
+# Salin konfigurasi environment jika belum ada
+cp .env.example .env
 go run main.go
 ```
 > Server REST API akan berjalan di: **http://localhost:8080**  
-> Database `todo_db` dan tabel `todos` otomatis dibuat oleh sistem (*auto migration*).
+> Mendukung database online (TiDB Cloud / Aiven) maupun lokal (Laragon). Tabel `todos` otomatis dibuat oleh sistem (*auto migration*).
 
 ---
 

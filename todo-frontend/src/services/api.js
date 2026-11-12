@@ -29,14 +29,15 @@ export const getTodos = async () => {
 /**
  * Membuat to-do baru
  * POST http://localhost:8080/api/todos
- * Payload: { "title": string, "priority": string, "due_date": string }
+ * Payload: { "title": string, "priority": string, "due_date": string, "reminder": string }
  */
-export const createTodo = async (title, priority = 'medium', dueDate = '') => {
+export const createTodo = async (title, priority = 'medium', dueDate = '', reminder = '30m') => {
   try {
     const response = await apiClient.post('/todos', {
       title: title.trim(),
       priority,
       due_date: dueDate || '',
+      reminder: reminder || '30m',
     });
     return response.data?.data;
   } catch (error) {
