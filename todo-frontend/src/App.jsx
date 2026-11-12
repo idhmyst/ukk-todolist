@@ -250,6 +250,23 @@ export default function App() {
     [handleToggleStatus]
   );
 
+  // Handler Buka & Minimize Kelarin AI (tersedia untuk desktop & mobile)
+  const handleOpenAi = useCallback(() => {
+    setIsAiMinimized(false);
+    setShowAiMobile(true);
+    setTimeout(() => {
+      const el = document.getElementById('kelarin-ai-container');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 80);
+  }, []);
+
+  const handleMinimizeAi = useCallback(() => {
+    setIsAiMinimized(true);
+    setShowAiMobile(false);
+  }, []);
+
   // Handler: Tambah Todo (POST /api/todos)
   const handleAddTodo = async (title, priority, dueDate, reminder = '30m') => {
     setIsSubmitting(true);
@@ -542,7 +559,7 @@ export default function App() {
               isRefreshing={isLoading}
               onRefresh={() => fetchTodosData(false)}
               onToggleWidgetMode={() => setIsWidgetMode(!isWidgetMode)}
-              onToggleAi={() => setShowAiMobile((prev) => !prev)}
+              onToggleAi={() => (showAiMobile ? handleMinimizeAi() : handleOpenAi())}
               showAiMobile={showAiMobile}
             />
 
@@ -795,36 +812,38 @@ export default function App() {
     </div>
 
     {/* SIDE 2: Kelarin AI Assistant (2-Side Layout: Sticky on Desktop, Collapsible on Mobile, Minimizable) */}
-    {!isAiMinimized && (
+    {(!isAiMinimized || showAiMobile) && (
       <div
+        id="kelarin-ai-container"
         className={`lg:col-span-5 xl:col-span-4 w-full ${
           showAiMobile ? 'block' : 'hidden lg:block'
-        } lg:sticky lg:top-6 transition-all`}
+        } ${isAiMinimized ? 'lg:hidden' : ''} lg:sticky lg:top-6 transition-all`}
       >
         <AiAssistant
           currentTodos={todos}
           onAddTodo={handleAddTodo}
           onOpenCalendar={() => setViewMode('calendar')}
           isOpen={true}
-          onClose={() => setShowAiMobile(false)}
-          onMinimize={() => {
-            setIsAiMinimized(true);
-            setShowAiMobile(false);
-          }}
+          onClose={handleMinimizeAi}
+          onMinimize={handleMinimizeAi}
         />
       </div>
     )}
   </div>
 </div>
 
-      {/* Floating Launcher saat Kelarin AI di-minimize (Ultra-Sleek Glassmorphic Pill) */}
-      {isAiMinimized && (
-        <div className="fixed bottom-6 right-6 z-40 animate-in fade-in zoom-in-95 duration-200">
+      {/* Floating Launcher Kelarin AI (Desktop saat minimized, Mobile saat belum dibuka) */}
+      {(isAiMinimized || !showAiMobile) && (
+        <div
+          className={`fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 animate-in fade-in zoom-in-95 duration-200 ${
+            !isAiMinimized ? 'lg:hidden' : 'block'
+          }`}
+        >
           <button
             type="button"
-            onClick={() => setIsAiMinimized(false)}
+            onClick={handleOpenAi}
             className="group flex items-center gap-2.5 pl-2 pr-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-slate-900 backdrop-blur-xl text-white shadow-xl shadow-indigo-950/25 border border-white/10 hover:border-indigo-400/50 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer ring-1 ring-black/5"
-            title="Buka kembali Kelarin AI Assistant"
+            title="Buka Kelarin AI Assistant"
           >
             {/* Luminous Gradient Avatar */}
             <div className="relative w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white shadow-sm shadow-indigo-500/40 flex-shrink-0 group-hover:scale-105 transition-transform">
