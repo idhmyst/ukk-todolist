@@ -37,7 +37,6 @@ import {
   Loader2,
   Bell,
   BellRing,
-  Volume2,
   VolumeX,
   X,
   Clock,
@@ -65,7 +64,6 @@ export default function App() {
   // Deadline Audio Alert & Notification States
   const notifiedKeysRef = useRef(new Set());
   const [activeAlertTodo, setActiveAlertTodo] = useState(null);
-  const [ringingSecondsLeft, setRingingSecondsLeft] = useState(60);
 
   // Desktop Floating Widget States
   const isUrlWidget = useMemo(() => {
@@ -148,9 +146,8 @@ export default function App() {
         if (diffMinutes <= thresholdMinutes && diffMinutes > 0) {
           if (!notifiedKeysRef.current.has(reminderKey)) {
             notifiedKeysRef.current.add(reminderKey);
-            // Putar nada dering berulang (loop) selama 1 menit (60 detik)
+            // Putar nada dering berulang (loop) selama 1 menit di latar belakang
             startDeadlineRingtoneLoop(60000);
-            setRingingSecondsLeft(60);
             showBrowserNotification(
               `🔔 Pengingat Deadline: ${todo.title}`,
               `Tersisa ${diffMinutes} menit sebelum tenggat waktu! (${info.formattedDate})`
@@ -168,9 +165,8 @@ export default function App() {
         if (diffMinutes <= 0 && diffMinutes >= -15) {
           if (!notifiedKeysRef.current.has(dueKey)) {
             notifiedKeysRef.current.add(dueKey);
-            // Putar nada dering berulang (loop) selama 1 menit (60 detik)
+            // Putar nada dering berulang (loop) selama 1 menit di latar belakang
             startDeadlineRingtoneLoop(60000);
-            setRingingSecondsLeft(60);
             showBrowserNotification(
               `⏰ Tenggat Waktu Tiba: ${todo.title}`,
               `Tenggat waktu tugas ini telah habis! Segera selesaikan tugasmu.`
@@ -189,26 +185,6 @@ export default function App() {
     const intervalId = setInterval(checkDeadlines, 10000);
     return () => clearInterval(intervalId);
   }, [todos]);
-
-  // Efek hitung mundur 60 detik pengulangan nada dering
-  useEffect(() => {
-    if (!activeAlertTodo) {
-      setRingingSecondsLeft(60);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setRingingSecondsLeft((prev) => {
-        if (prev <= 1) {
-          stopDeadlineRingtoneLoop();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [activeAlertTodo]);
 
   // Handler: Toggle Status Selesai (PUT /api/todos/:id)
   const handleToggleStatus = useCallback(
@@ -426,135 +402,92 @@ export default function App() {
         </div>
       )}
 
-      {/* Floating Active Deadline Alert Banner with 60-Second Loop & Ringtone Animation */}
+      {/* Floating Active Deadline Alert Toast (Sleek, Clean, Modern Design) */}
       {activeAlertTodo && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-3 animate-in slide-in-from-top-6 duration-300">
-          <div className="relative overflow-hidden bg-slate-950/95 text-white rounded-3xl p-4 sm:p-5 shadow-2xl border border-indigo-500/40 shadow-indigo-950/80 ring-1 ring-white/10 backdrop-blur-2xl">
-            {/* Ambient Background Glow */}
-            <div className="absolute -top-10 -right-10 w-36 h-36 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="relative overflow-hidden rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-slate-700/60 shadow-2xl shadow-slate-950/80 ring-1 ring-white/10 p-4 text-white">
+            {/* Ambient Background Accent Glow */}
+            <div className="absolute -top-10 -right-10 w-28 h-28 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
 
-            {/* Header Content */}
-            <div className="relative flex items-start justify-between gap-3.5">
-              <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                {/* Ringing Bell Icon with Live Sound Pulsing Ping */}
-                <div className="relative flex-shrink-0 mt-0.5">
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/35 ring-2 ring-white/20">
-                    <BellRing className="w-5 h-5 sm:w-6 sm:h-6 text-amber-300 animate-bounce" />
-                  </div>
-                  {ringingSecondsLeft > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-rose-500 border-2 border-slate-950" />
-                    </span>
-                  )}
-                </div>
+            <div className="relative flex items-start gap-3.5">
+              {/* Pulsing Bell Icon with Soft Ambient Border */}
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-indigo-500/20 border border-amber-500/30 flex items-center justify-center flex-shrink-0 text-amber-400 mt-0.5">
+                <BellRing className="w-5 h-5 animate-pulse" />
+              </div>
 
-                {/* Details */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
+              {/* Main Content Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs ${
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${
                         activeAlertTodo.type === 'due'
-                          ? 'bg-rose-600 text-white ring-1 ring-rose-400/50'
-                          : 'bg-gradient-to-r from-amber-500 to-rose-500 text-white'
+                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                       }`}
                     >
-                      {activeAlertTodo.type === 'due'
-                        ? 'Tenggat Waktu Tiba'
-                        : 'Pengingat Deadline'}
+                      {activeAlertTodo.type === 'due' ? 'Tenggat Waktu Tiba' : 'Pengingat Deadline'}
                     </span>
-                    <span className="text-xs text-indigo-200 font-bold">
+                    <span className="text-[11px] font-medium text-slate-400">
                       {activeAlertTodo.diffMinutes > 0
-                        ? `Sisa ${activeAlertTodo.diffMinutes} menit lagi!`
-                        : 'Waktu telah habis!'}
+                        ? `Sisa ${activeAlertTodo.diffMinutes} menit`
+                        : 'Waktu telah habis'}
                     </span>
                   </div>
 
-                  {/* Task Title */}
-                  <h4 className="text-sm sm:text-base font-bold text-white leading-snug break-words">
-                    {activeAlertTodo.todo.title}
-                  </h4>
+                  {/* Close X Button */}
+                  <button
+                    type="button"
+                    onClick={handleDismissAlert}
+                    className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex-shrink-0"
+                    title="Tutup notifikasi & matikan nada"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
 
-                  {/* Formatted Deadline */}
-                  {activeAlertTodo.todo.due_date && (
-                    <p className="text-xs text-slate-300 mt-1 flex items-center gap-1 font-medium">
-                      <Clock className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
-                      <span>
-                        Tenggat:{' '}
-                        <strong className="text-white">
-                          {getDeadlineInfo(activeAlertTodo.todo.due_date)
-                            ?.formattedDate || activeAlertTodo.todo.due_date}
-                        </strong>
-                      </span>
-                    </p>
-                  )}
+                {/* Task Title */}
+                <h4 className="text-sm font-semibold text-white tracking-tight leading-snug break-words mt-1.5">
+                  {activeAlertTodo.todo.title}
+                </h4>
+
+                {/* Formatted Deadline */}
+                {activeAlertTodo.todo.due_date && (
+                  <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5 font-normal">
+                    <Clock className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                    <span>
+                      Tenggat:{' '}
+                      <strong className="text-slate-200 font-medium">
+                        {getDeadlineInfo(activeAlertTodo.todo.due_date)?.formattedDate ||
+                          activeAlertTodo.todo.due_date}
+                      </strong>
+                    </span>
+                  </p>
+                )}
+
+                {/* Action Buttons: Heningkan & Tandai Selesai */}
+                <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-slate-800/80">
+                  <button
+                    type="button"
+                    onClick={handleDismissAlert}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 transition-colors cursor-pointer"
+                    title="Hentikan nada dan tutup notifikasi"
+                  >
+                    <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Heningkan</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleCompleteAlertTodo(activeAlertTodo.todo.id)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 shadow-md shadow-emerald-950/40 transition-all cursor-pointer"
+                    title="Tandai tugas ini selesai dan hentikan nada"
+                  >
+                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Tandai Selesai</span>
+                  </button>
                 </div>
               </div>
-
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={handleDismissAlert}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer flex-shrink-0"
-                title="Tutup banner & matikan nada"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Ringing Sound Indicator & 60-Second Loop Progress Bar */}
-            <div className="relative mt-3.5 pt-3 border-t border-white/10">
-              <div className="flex items-center justify-between text-xs text-slate-400 mb-2 font-medium">
-                <span className="flex items-center gap-1.5 text-indigo-300 font-semibold">
-                  <Volume2
-                    className={`w-4 h-4 ${
-                      ringingSecondsLeft > 0
-                        ? 'text-emerald-400 animate-pulse'
-                        : 'text-slate-500'
-                    }`}
-                  />
-                  <span>
-                    {ringingSecondsLeft > 0
-                      ? 'Melodi berdering (Loop 1 Menit)'
-                      : 'Nada dering selesai'}
-                  </span>
-                </span>
-                <span className="font-mono text-xs font-bold text-slate-200 bg-slate-900 px-2 py-0.5 rounded-lg border border-white/10">
-                  {ringingSecondsLeft > 0 ? `${ringingSecondsLeft}s` : 'Selesai'}
-                </span>
-              </div>
-
-              {/* Smooth Progress Bar */}
-              <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 transition-all duration-1000 ease-linear rounded-full"
-                  style={{ width: `${(ringingSecondsLeft / 60) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Actions: Heningkan (Mute) & Tandai Selesai (No Bunyikan Nada) */}
-            <div className="relative flex items-center justify-end gap-2.5 mt-3.5 pt-1">
-              <button
-                type="button"
-                onClick={handleDismissAlert}
-                className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-white/10 transition-all cursor-pointer"
-                title="Hentikan nada dan tutup notifikasi"
-              >
-                <VolumeX className="w-4 h-4 text-slate-400" />
-                <span>Heningkan</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleCompleteAlertTodo(activeAlertTodo.todo.id)}
-                className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 shadow-lg shadow-emerald-950/40 transition-all cursor-pointer"
-                title="Tandai tugas ini selesai dan hentikan nada"
-              >
-                <Check className="w-4 h-4 stroke-[3]" />
-                <span>Tandai Selesai</span>
-              </button>
             </div>
           </div>
         </div>
