@@ -1,12 +1,10 @@
 import React from 'react';
-import { CheckCircle2, RefreshCw, LayoutTemplate, Sparkles } from 'lucide-react';
+import { CheckCircle2, RefreshCw, LayoutTemplate } from 'lucide-react';
 
 export default function Navbar({
   isRefreshing,
   onRefresh,
   onToggleWidgetMode,
-  onToggleAi,
-  showAiMobile,
 }) {
   return (
     <header className="mb-6 pb-5 border-b border-slate-100">
@@ -25,18 +23,6 @@ export default function Navbar({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
-          {/* Mobile AI Toggle Button */}
-          <button
-            type="button"
-            onClick={onToggleAi}
-            title="Buka Kelarin AI Assistant"
-            className="lg:hidden flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 active:from-indigo-700 active:to-purple-700 rounded-xl shadow-xs transition-all cursor-pointer"
-          >
-            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-            <span className="hidden sm:inline">AI Assistant</span>
-            <span className="sm:hidden">AI</span>
-          </button>
-
           {/* Widget Desktop Button */}
           <button
             type="button"
