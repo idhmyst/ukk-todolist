@@ -5,6 +5,8 @@
  */
 
 let audioCtx = null;
+let loopIntervalId = null;
+let loopTimeoutId = null;
 
 function getAudioContext() {
   if (!audioCtx) {
@@ -74,6 +76,44 @@ export function playDeadlineRingtone() {
   } catch (err) {
     console.warn('Gagal memutar nada dering:', err);
   }
+}
+
+/**
+ * Menghentikan pengulangan nada dering loop
+ */
+export function stopDeadlineRingtoneLoop() {
+  if (loopIntervalId) {
+    clearInterval(loopIntervalId);
+    loopIntervalId = null;
+  }
+  if (loopTimeoutId) {
+    clearTimeout(loopTimeoutId);
+    loopTimeoutId = null;
+  }
+}
+
+/**
+ * Memutar nada dering berulang (loop) selama durasi tertentu (default 60.000 ms / 1 menit)
+ * Berhenti otomatis saat waktu habis atau saat pengguna menandai selesai / menutup alert.
+ */
+export function startDeadlineRingtoneLoop(durationMs = 60000, onComplete) {
+  stopDeadlineRingtoneLoop();
+
+  // Bunyikan nada pertama segera
+  playDeadlineRingtone();
+
+  // Ulangi nada melodi setiap 2.8 detik
+  loopIntervalId = setInterval(() => {
+    playDeadlineRingtone();
+  }, 2800);
+
+  // Auto-stop setelah 1 menit
+  loopTimeoutId = setTimeout(() => {
+    stopDeadlineRingtoneLoop();
+    if (typeof onComplete === 'function') {
+      onComplete();
+    }
+  }, durationMs);
 }
 
 /**
