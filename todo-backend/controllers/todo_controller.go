@@ -53,11 +53,17 @@ func CreateTodo(c *gin.Context) {
 		priority = "medium"
 	}
 
+	reminder := strings.ToLower(strings.TrimSpace(input.Reminder))
+	if reminder == "" {
+		reminder = "30m"
+	}
+
 	todo := models.Todo{
 		Title:       trimmedTitle,
 		Priority:    priority,
 		IsCompleted: false,
 		DueDate:     strings.TrimSpace(input.DueDate),
+		Reminder:    reminder,
 	}
 
 	if err := config.DB.Create(&todo).Error; err != nil {
@@ -117,6 +123,10 @@ func UpdateTodo(c *gin.Context) {
 
 	if input.IsCompleted != nil {
 		updates["is_completed"] = *input.IsCompleted
+	}
+
+	if input.Reminder != nil {
+		updates["reminder"] = strings.ToLower(strings.TrimSpace(*input.Reminder))
 	}
 
 	// Eksekusi update jika ada field yang dikirim

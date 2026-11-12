@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -52,9 +54,17 @@ func main() {
 		api.DELETE("/todos/:id", controllers.DeleteTodo)
 	}
 
-	// 6. Jalankan Server pada Port :8080
-	log.Println("🚀 Server To-Do REST API berjalan di http://localhost:8080")
-	if err := r.Run(":8080"); err != nil {
+	// 6. Jalankan Server (Port dinamis dari environment variable atau default :8080)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	if !strings.HasPrefix(port, ":") {
+		port = ":" + port
+	}
+
+	log.Printf("🚀 Server To-Do REST API berjalan di http://localhost%s\n", port)
+	if err := r.Run(port); err != nil {
 		log.Fatalf("❌ Gagal menjalankan server: %v", err)
 	}
 }
