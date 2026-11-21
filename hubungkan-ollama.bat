@@ -34,9 +34,9 @@ echo PENTING: JANGAN TUTUP jendela hitam ini selama menggunakan AI di Vercel!
 echo =======================================================================
 echo.
 if exist "%~dp0cloudflared.exe" (
-    "%~dp0cloudflared.exe" tunnel --url http://127.0.0.1:11434
+    "%~dp0cloudflared.exe" tunnel --url http://127.0.0.1:11434 --http-host-header localhost
 ) else (
     curl.exe -L -s https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -o "%~dp0cloudflared.exe"
-    "%~dp0cloudflared.exe" tunnel --url http://127.0.0.1:11434
+    "%~dp0cloudflared.exe" tunnel --url http://127.0.0.1:11434 --http-host-header localhost
 )
 pause
