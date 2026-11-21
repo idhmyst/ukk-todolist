@@ -241,7 +241,7 @@ export default function AiAssistant({
                 className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/60 transition-colors flex items-center gap-1 cursor-pointer"
                 title="Klik untuk beralih antara Ollama Qwen dan Gemini"
               >
-                <span>{provider === 'ollama' ? '🦙 Qwen 2.5 3B' : '✨ Gemini 2.5'}</span>
+                <span>{provider === 'ollama' ? '🦙 Qwen 2.5 3B' : '✨ Gemini Flash'}</span>
               </button>
             </div>
             <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">

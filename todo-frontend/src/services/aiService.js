@@ -41,8 +41,8 @@ export function setOllamaConfig(url, model) {
 
 export function getGeminiApiKey() {
   return (
-    import.meta.env.VITE_GEMINI_API_KEY ||
     (typeof window !== 'undefined' ? localStorage.getItem('kelarin_gemini_api_key') : '') ||
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) ||
     ''
   );
 }
@@ -393,9 +393,9 @@ export async function sendGeminiCommand(userPrompt, currentTodos = [], chatHisto
   });
 
   const candidateModels = [
-    'gemini-2.5-flash',
-    'gemini-flash-latest',
-    'gemini-2.5-pro'
+    'gemini-3.5-flash-lite',
+    'gemini-3.5-flash',
+    'gemini-3.8-flash',
   ];
 
   let lastError = null;
