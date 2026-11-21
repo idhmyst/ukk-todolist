@@ -2,18 +2,27 @@ import axios from 'axios';
 
 // Base URL REST API: Otomatis gunakan /api di Vercel cloud, atau http://localhost:8080/api saat dev lokal
 const getBaseUrl = () => {
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
+  // 1. Jika diakses melalui browser di Vercel cloud (bukan localhost), SELALU gunakan Serverless API (/api)
   if (typeof window !== 'undefined') {
-    const isLocalhost =
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.hostname === '';
+    const host = window.location.hostname;
+    const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '';
     if (!isLocalhost) {
       return '/api';
     }
   }
+
+  // 2. Jika di localhost dan ada custom VITE_API_URL yang bukan dummy Render
+  const customUrl = (import.meta.env.VITE_API_URL || '').trim();
+  if (
+    customUrl &&
+    !customUrl.includes('onrender.com') &&
+    !customUrl.includes('nama-backend') &&
+    !customUrl.includes('example.com')
+  ) {
+    return customUrl;
+  }
+
+  // 3. Default saat development di laptop
   return 'http://localhost:8080/api';
 };
 
