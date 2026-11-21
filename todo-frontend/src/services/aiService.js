@@ -203,26 +203,51 @@ export async function sendOllamaCommand(userPrompt, currentTodos = [], chatHisto
 
   messages.push({ role: 'user', content: userPrompt });
 
-  let response;
-  try {
-    response = await fetch(`${url}/api/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        messages,
-        stream: false,
-        format: 'json',
-        options: {
-          temperature: 0.2,
+  const candidateEndpoints = [
+    // 1. Backend Go proxy (melewati CORS & Mixed-Content)
+    `${(import.meta.env.VITE_API_URL || 'http://localhost:8080/api').replace(/\/+$/, '')}/ai/chat`,
+    // 2. Vite dev proxy
+    '/api/ollama/api/chat',
+    // 3. Direct Ollama
+    `${url}/api/chat`,
+  ];
+
+  const payload = {
+    model,
+    messages,
+    stream: false,
+    format: 'json',
+    options: {
+      temperature: 0.2,
+    },
+  };
+
+  let response = null;
+  let lastNetErr = null;
+
+  for (const endpoint of candidateEndpoints) {
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      }),
-    });
-  } catch (err) {
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        response = res;
+        break;
+      }
+    } catch (err) {
+      lastNetErr = err;
+      continue;
+    }
+  }
+
+  if (!response) {
     throw new Error(
-      `Tidak dapat terhubung ke Ollama (${url}). Pastikan aplikasi Ollama berjalan di laptop Anda (buka aplikasi Ollama atau jalankan 'ollama run ${model}' di terminal).`
+      `Tidak dapat terhubung ke Ollama (${url}). Pastikan aplikasi Ollama berjalan di laptop Anda (buka aplikasi Ollama atau jalankan 'ollama run ${model}' di terminal) serta backend aktif.`
     );
   }
 
