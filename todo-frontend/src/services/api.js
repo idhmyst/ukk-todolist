@@ -1,7 +1,23 @@
 import axios from 'axios';
 
-// Base URL REST API Backend Golang Gin
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+// Base URL REST API: Otomatis gunakan /api di Vercel cloud, atau http://localhost:8080/api saat dev lokal
+const getBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (typeof window !== 'undefined') {
+    const isLocalhost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === '';
+    if (!isLocalhost) {
+      return '/api';
+    }
+  }
+  return 'http://localhost:8080/api';
+};
+
+const API_BASE_URL = getBaseUrl();
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -9,7 +25,7 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
-  timeout: 8000,
+  timeout: 10000,
 });
 
 /**
@@ -96,7 +112,7 @@ export const clearCompletedTodos = async (completedIds = []) => {
 function handleApiError(error) {
   if (error.code === 'ERR_NETWORK' || !error.response) {
     return new Error(
-      `Tidak dapat terhubung ke server backend Golang (${API_BASE_URL}). Pastikan server backend Go dan database PostgreSQL sudah berjalan.`
+      `Tidak dapat terhubung ke server backend (${API_BASE_URL}). Pastikan server backend dan database sudah berjalan.`
     );
   }
   const backendMsg = error.response?.data?.error || error.response?.data?.message;

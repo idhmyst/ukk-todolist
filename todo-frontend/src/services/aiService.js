@@ -203,9 +203,17 @@ export async function sendOllamaCommand(userPrompt, currentTodos = [], chatHisto
 
   messages.push({ role: 'user', content: userPrompt });
 
+  const isLocalhost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+     window.location.hostname === '127.0.0.1' ||
+     window.location.hostname === '');
+
+  const apiBase = import.meta.env.VITE_API_URL || (!isLocalhost ? '/api' : 'http://localhost:8080/api');
+
   const candidateEndpoints = [
-    // 1. Backend Go proxy (melewati CORS & Mixed-Content)
-    `${(import.meta.env.VITE_API_URL || 'http://localhost:8080/api').replace(/\/+$/, '')}/ai/chat`,
+    // 1. Backend proxy (Go lokal atau Vercel Cloud)
+    `${apiBase.replace(/\/+$/, '')}/ai/chat`,
     // 2. Vite dev proxy
     '/api/ollama/api/chat',
     // 3. Direct Ollama

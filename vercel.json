@@ -1,0 +1,10 @@
+{
+  "buildCommand": "cd todo-frontend && npm run build",
+  "outputDirectory": "todo-frontend/dist",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ]
+}
