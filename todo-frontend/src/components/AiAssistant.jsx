@@ -373,7 +373,7 @@ export default function AiAssistant({
                       type="text"
                       value={ollamaUrlInput}
                       onChange={(e) => setOllamaUrlInput(e.target.value)}
-                      placeholder="http://localhost:11434 atau https://xxxx.loca.lt"
+                      placeholder="http://localhost:11434 atau https://xxxx.trycloudflare.com"
                       className="flex-1 px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-[11px] focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none"
                     />
                     <button
@@ -412,7 +412,7 @@ export default function AiAssistant({
                     </p>
                     <ol className="list-decimal list-inside space-y-0.5 mt-1 text-indigo-800">
                       <li>Jalankan file <code className="bg-indigo-100/90 px-1 py-0.2 rounded font-mono font-bold text-indigo-950">hubungkan-ollama.bat</code> di laptop.</li>
-                      <li>Salin URL HTTPS yang muncul (<code className="font-mono">https://xxxx.loca.lt</code>).</li>
+                      <li>Salin URL HTTPS yang muncul (<code className="font-mono">https://xxxx.trycloudflare.com</code>).</li>
                       <li>Tempel ke kolom URL di atas, klik <b>Tes</b> lalu <b>Simpan</b>.</li>
                     </ol>
                   </div>
