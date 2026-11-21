@@ -1,5 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { sendAiCommand, stripMarkdownSymbols } from '../services/aiService';
+import {
+  sendAiCommand,
+  stripMarkdownSymbols,
+  getAiProvider,
+  setAiProvider,
+  getOllamaConfig,
+} from '../services/aiService';
 import {
   Sparkles,
   Send,
@@ -51,10 +57,17 @@ export default function AiAssistant({
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
+  const [provider, setProviderState] = useState(getAiProvider());
   const [inputPrompt, setInputPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [addedTodoIds, setAddedTodoIds] = useState(new Set());
   const messagesEndRef = useRef(null);
+
+  const toggleProvider = () => {
+    const next = provider === 'ollama' ? 'gemini' : 'ollama';
+    setProviderState(next);
+    setAiProvider(next);
+  };
 
   // Auto scroll to bottom of chat
   useEffect(() => {
@@ -173,13 +186,18 @@ export default function AiAssistant({
               <h3 className="text-sm font-bold tracking-tight text-white">
                 Kelarin AI
               </h3>
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-700/60">
-                v2.5 Flash
-              </span>
+              <button
+                type="button"
+                onClick={toggleProvider}
+                className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/60 transition-colors flex items-center gap-1 cursor-pointer"
+                title="Klik untuk beralih antara Ollama Qwen dan Gemini"
+              >
+                <span>{provider === 'ollama' ? '🦙 Qwen 2.5 3B' : '✨ Gemini 2.5'}</span>
+              </button>
             </div>
             <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-              <span>Online • Asisten Jadwal & Tugas</span>
+              <span className={`w-1.5 h-1.5 rounded-full ${provider === 'ollama' ? 'bg-emerald-400' : 'bg-indigo-400'} inline-block`} />
+              <span>{provider === 'ollama' ? 'Ollama Lokal • Offline & Bebas Key' : 'Online • Google Gemini Cloud'}</span>
             </p>
           </div>
         </div>
