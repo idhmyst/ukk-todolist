@@ -163,6 +163,7 @@ export default function AiAssistant({
         id: `err_${Date.now()}`,
         role: 'model',
         isError: true,
+        originalPrompt: prompt,
         text: `Terjadi kendala: ${err.message || 'Coba periksa koneksi internet.'}`,
         timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       };
@@ -516,6 +517,42 @@ export default function AiAssistant({
               >
                 {/* Text Message */}
                 <p className="whitespace-pre-wrap">{cleanText}</p>
+
+                {/* Tombol Bantuan Cepat saat terjadi kendala */}
+                {msg.isError && (
+                  <div className="mt-2.5 pt-2 border-t border-rose-200/60 flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProviderState('ollama');
+                        setAiProvider('ollama');
+                        if (msg.originalPrompt) handleSendMessage(msg.originalPrompt);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                    >
+                      <span>🦙 Coba Pakai Ollama</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProviderState('gemini');
+                        setAiProvider('gemini');
+                        if (msg.originalPrompt) handleSendMessage(msg.originalPrompt);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                    >
+                      <span>✨ Coba Pakai Gemini</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowSettings(true)}
+                      className="px-2 py-1 rounded-lg bg-white hover:bg-rose-100 text-rose-800 border border-rose-300 font-semibold text-[10px] flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <Settings className="w-3 h-3" />
+                      <span>Pengaturan</span>
+                    </button>
+                  </div>
+                )}
 
                 {/* AI Extracted Todo Cards */}
                 {hasTodos && (
