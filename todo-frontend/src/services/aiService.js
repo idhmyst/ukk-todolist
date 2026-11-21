@@ -58,22 +58,59 @@ export function setGeminiApiKey(key) {
 }
 
 /**
- * Cek apakah Ollama lokal aktif dan merespons
+ * Cek apakah Ollama lokal/tunnel aktif dan merespons
  */
-export async function checkOllamaStatus() {
-  const { url } = getOllamaConfig();
+export async function checkOllamaStatus(customUrl) {
+  const url = (customUrl || getOllamaConfig().url || 'http://localhost:11434').trim().replace(/\/+$/, '');
+  const isLocalhost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+     window.location.hostname === '127.0.0.1' ||
+     window.location.hostname === '');
+
+  // 1. Jika di cloud Vercel, tes via serverless proxy /api/ai/status agar bebas dari blokir Mixed-Content/CORS
+  if (!isLocalhost) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const res = await fetch('/api/ai/status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-ollama-url': url,
+        },
+        body: JSON.stringify({ url }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const data = await res.json();
+        return data;
+      }
+    } catch {
+      // lanjut ke direct fetch
+    }
+  }
+
+  // 2. Direct fetch (berfungsi jika frontend diakses via localhost)
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
-    const res = await fetch(`${url}/api/tags`, { signal: controller.signal });
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(`${url}/api/tags`, {
+      headers: {
+        'bypass-tunnel-reminder': 'true',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      signal: controller.signal,
+    });
     clearTimeout(timeoutId);
     if (res.ok) {
       const data = await res.json();
       return { online: true, models: (data.models || []).map((m) => m.name) };
     }
-    return { online: false, models: [] };
-  } catch {
-    return { online: false, models: [] };
+    return { online: false, models: [], error: `Status ${res.status}` };
+  } catch (err) {
+    return { online: false, models: [], error: err.message };
   }
 }
 
@@ -216,8 +253,8 @@ export async function sendOllamaCommand(userPrompt, currentTodos = [], chatHisto
     `${apiBase.replace(/\/+$/, '')}/ai/chat`,
     // 2. Vite dev proxy
     '/api/ollama/api/chat',
-    // 3. Direct Ollama
-    `${url}/api/chat`,
+    // 3. Direct Ollama / Tunnel
+    `${url.replace(/\/+$/, '')}/api/chat`,
   ];
 
   const payload = {
@@ -225,13 +262,14 @@ export async function sendOllamaCommand(userPrompt, currentTodos = [], chatHisto
     messages,
     stream: false,
     format: 'json',
+    ollama_url: url,
     options: {
       temperature: 0.2,
     },
   };
 
   let response = null;
-  let lastNetErr = null;
+  let lastErrorMsg = null;
 
   for (const endpoint of candidateEndpoints) {
     try {
@@ -239,6 +277,9 @@ export async function sendOllamaCommand(userPrompt, currentTodos = [], chatHisto
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-ollama-url': url,
+          'bypass-tunnel-reminder': 'true',
+          'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify(payload),
       });
@@ -246,16 +287,25 @@ export async function sendOllamaCommand(userPrompt, currentTodos = [], chatHisto
       if (res.ok) {
         response = res;
         break;
+      } else {
+        const errJson = await res.json().catch(() => null);
+        if (errJson?.error) {
+          lastErrorMsg = errJson.error;
+        }
       }
-    } catch (err) {
-      lastNetErr = err;
+    } catch {
       continue;
     }
   }
 
   if (!response) {
+    if (lastErrorMsg) {
+      throw new Error(lastErrorMsg);
+    }
     throw new Error(
-      `Tidak dapat terhubung ke Ollama (${url}). Pastikan aplikasi Ollama berjalan di laptop Anda (buka aplikasi Ollama atau jalankan 'ollama run ${model}' di terminal) serta backend aktif.`
+      `Tidak dapat terhubung ke Ollama (${url}). ` +
+      `Jika Anda mengakses website ini dari Vercel Cloud, jalankan 'hubungkan-ollama.bat' di laptop Anda ` +
+      `lalu masukkan URL HTTPS yang muncul ke Pengaturan AI (⚙️), atau gunakan mode Gemini AI.`
     );
   }
 

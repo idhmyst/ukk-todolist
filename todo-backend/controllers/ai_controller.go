@@ -14,7 +14,10 @@ import (
 // ProxyOllamaChat meneruskan request AI ke Ollama lokal (bebas CORS & mixed content)
 // POST /api/ai/chat
 func ProxyOllamaChat(c *gin.Context) {
-	ollamaURL := strings.TrimSpace(os.Getenv("OLLAMA_URL"))
+	ollamaURL := strings.TrimSpace(c.GetHeader("X-Ollama-Url"))
+	if ollamaURL == "" {
+		ollamaURL = strings.TrimSpace(os.Getenv("OLLAMA_URL"))
+	}
 	if ollamaURL == "" {
 		ollamaURL = "http://127.0.0.1:11434"
 	}
