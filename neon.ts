@@ -6,7 +6,7 @@ export default defineConfig({
     realtime: true,
   },
   auth: true,
-  aiGateway: true,
+  aiGateway: false, // Dimatikan agar tidak memerlukan kartu kredit / billing
   functions: {
     hello: { name: "Hello World", source: "./hello.ts" },
   },
