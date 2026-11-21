@@ -96,7 +96,7 @@ export const clearCompletedTodos = async (completedIds = []) => {
 function handleApiError(error) {
   if (error.code === 'ERR_NETWORK' || !error.response) {
     return new Error(
-      'Tidak dapat terhubung ke server backend Golang (http://localhost:8080). Pastikan server Go dan MySQL sudah berjalan.'
+      `Tidak dapat terhubung ke server backend Golang (${API_BASE_URL}). Pastikan server backend Go dan database PostgreSQL sudah berjalan.`
     );
   }
   const backendMsg = error.response?.data?.error || error.response?.data?.message;

@@ -22,8 +22,8 @@ export default function ErrorAlert({ message, onRetry, isRetrying }) {
               <span>Petunjuk Menjalankan Backend:</span>
             </div>
             <ol className="list-decimal list-inside space-y-1 text-slate-600 pl-1 font-mono text-[11px]">
-              <li>Buka terminal baru di folder <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-700 font-semibold">todo-backend</code></li>
-              <li>Pastikan MySQL berjalan (XAMPP / Laragon / Docker)</li>
+              <li>Buka terminal di folder <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-700 font-semibold">todo-backend</code></li>
+              <li>Pastikan Database PostgreSQL aktif (Cloud Neon/Supabase atau Lokal)</li>
               <li>Jalankan perintah: <code className="bg-slate-100 px-1 py-0.5 rounded text-rose-600 font-bold">go run main.go</code></li>
             </ol>
           </div>
