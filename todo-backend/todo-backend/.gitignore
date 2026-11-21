@@ -1,4 +1,28 @@
-# Binaries for programs and plugins
+# ==========================================
+# Root .gitignore — UKK To-Do List Fullstack
+# ==========================================
+
+# -----------------
+# Node.js & Frontend
+# -----------------
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+dist-ssr/
+**/dist-ssr/
+build/
+**/build/
+.vite/
+**/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# -----------------
+# Golang & Backend
+# -----------------
 *.exe
 *.exe~
 *.dll
@@ -6,43 +30,48 @@
 *.dylib
 main
 main.exe
-todo-backend
-todo-backend.exe
-
-# Test binary, built with 'go test -c'
+**/main.exe
 *.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
 go.work
 go.work.sum
 
-# Environment variables
+# -----------------
+# Environment Files & Secrets
+# -----------------
 .env
 .env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
 
-# Logs
+# -----------------
+# Databases & Logs
+# -----------------
 *.log
 logs/
-
-# Database files (if SQLite used locally)
+**/logs/
 *.db
 *.sqlite
 *.sqlite3
 
-# IDE / Editor
+# -----------------
+# IDEs & Text Editors
+# -----------------
 .idea/
+**/.idea/
 .vscode/*
-!.vscode/extensions.json
-*.swp
-*~
+!**/.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# OS generated files
+# -----------------
+# Operating System Files
+# -----------------
 .DS_Store
 Thumbs.db
 Desktop.ini
