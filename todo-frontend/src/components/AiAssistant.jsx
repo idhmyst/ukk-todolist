@@ -2,13 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   sendAiCommand,
   stripMarkdownSymbols,
-  getAiProvider,
-  setAiProvider,
-  getOllamaConfig,
-  setOllamaConfig,
   getGeminiApiKey,
   setGeminiApiKey,
-  checkOllamaStatus,
 } from '../services/aiService';
 import {
   Sparkles,
@@ -25,10 +20,8 @@ import {
   X,
   Settings,
   Check,
-  AlertCircle,
   Eye,
   EyeOff,
-  Link2,
 } from 'lucide-react';
 
 const SUGGESTIONS = [
@@ -62,67 +55,34 @@ export default function AiAssistant({
     {
       id: 'welcome',
       role: 'model',
-      text: 'Halo! Mau catat atau cek tugas apa hari ini?',
+      text: 'Halo! Saya Kelarin AI. Mau catat atau cek tugas apa hari ini?',
       todos: [],
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
-  const [provider, setProviderState] = useState(getAiProvider());
   const [inputPrompt, setInputPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [addedTodoIds, setAddedTodoIds] = useState(new Set());
   const messagesEndRef = useRef(null);
 
-  // Settings Modal States
+  // Settings Modal States for custom Gemini API Key
   const [showSettings, setShowSettings] = useState(false);
-  const [ollamaUrlInput, setOllamaUrlInput] = useState(getOllamaConfig().url);
   const [geminiKeyInput, setGeminiKeyInput] = useState(getGeminiApiKey());
-  const [isTestingOllama, setIsTestingOllama] = useState(false);
-  const [testResult, setTestResult] = useState(null);
   const [showKey, setShowKey] = useState(false);
-
-  const toggleProvider = () => {
-    const next = provider === 'ollama' ? 'gemini' : 'ollama';
-    setProviderState(next);
-    setAiProvider(next);
-  };
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Auto scroll to bottom of chat
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  const handleTestOllama = async () => {
-    setIsTestingOllama(true);
-    setTestResult(null);
-    try {
-      const res = await checkOllamaStatus(ollamaUrlInput);
-      if (res.online) {
-        setTestResult({
-          success: true,
-          message: `Berhasil terhubung ke Ollama! Model aktif: ${res.models?.join(', ') || 'qwen2.5:3b'}`,
-        });
-      } else {
-        setTestResult({
-          success: false,
-          message: `Tidak dapat terhubung: ${res.error || 'Pastikan Ollama atau hubungkan-ollama.bat aktif'}`,
-        });
-      }
-    } catch (err) {
-      setTestResult({
-        success: false,
-        message: `Koneksi gagal: ${err.message}`,
-      });
-    } finally {
-      setIsTestingOllama(false);
-    }
-  };
-
   const handleSaveSettings = () => {
-    setOllamaConfig(ollamaUrlInput.trim(), 'qwen2.5:3b');
     setGeminiApiKey(geminiKeyInput.trim());
-    setShowSettings(false);
-    setTestResult(null);
+    setSaveSuccess(true);
+    setTimeout(() => {
+      setSaveSuccess(false);
+      setShowSettings(false);
+    }, 600);
   };
 
   const handleSendMessage = async (textToSend) => {
@@ -163,7 +123,6 @@ export default function AiAssistant({
         id: `err_${Date.now()}`,
         role: 'model',
         isError: true,
-        originalPrompt: prompt,
         text: `Terjadi kendala: ${err.message || 'Coba periksa koneksi internet.'}`,
         timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       };
@@ -236,34 +195,27 @@ export default function AiAssistant({
               <h3 className="text-sm font-bold tracking-tight text-white">
                 Kelarin AI
               </h3>
-              <button
-                type="button"
-                onClick={toggleProvider}
-                className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/60 transition-colors flex items-center gap-1 cursor-pointer"
-                title="Klik untuk beralih antara Ollama Qwen dan Gemini"
-              >
-                <span>{provider === 'ollama' ? '🦙 Qwen 2.5 3B' : '✨ Gemini Flash'}</span>
-              </button>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-950 text-indigo-300 border border-indigo-700/60 flex items-center gap-1">
+                <span>✨ Gemini Flash</span>
+              </span>
             </div>
             <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
-              <span className={`w-1.5 h-1.5 rounded-full ${provider === 'ollama' ? 'bg-emerald-400' : 'bg-indigo-400'} inline-block`} />
-              <span>{provider === 'ollama' ? 'Ollama • Bebas Key' : 'Online • Google Gemini Cloud'}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+              <span>Online • Google Gemini Cloud</span>
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-1">
-          {/* Tombol Pengaturan AI */}
+          {/* Tombol Pengaturan API Key */}
           <button
             type="button"
             onClick={() => {
               setShowSettings(true);
-              setOllamaUrlInput(getOllamaConfig().url);
               setGeminiKeyInput(getGeminiApiKey());
-              setTestResult(null);
             }}
             className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Pengaturan Model & Koneksi AI"
+            title="Pengaturan API Key"
           >
             <Settings className="w-4 h-4" />
           </button>
@@ -304,7 +256,7 @@ export default function AiAssistant({
         </div>
       </div>
 
-      {/* Modal Pengaturan AI Overlay */}
+      {/* Modal Pengaturan API Key Overlay */}
       {showSettings && (
         <div className="absolute inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[92%] animate-in fade-in zoom-in-95 duration-150">
@@ -312,11 +264,11 @@ export default function AiAssistant({
             <div className="px-4 py-3 bg-slate-900 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Settings className="w-4 h-4 text-indigo-400" />
-                <h4 className="text-xs font-bold">Pengaturan Koneksi AI</h4>
+                <h4 className="text-xs font-bold">Pengaturan Google Gemini</h4>
               </div>
               <button
                 type="button"
-                onClick={() => { setShowSettings(false); setTestResult(null); }}
+                onClick={() => setShowSettings(false)}
                 className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
@@ -324,125 +276,34 @@ export default function AiAssistant({
             </div>
 
             {/* Content Modal */}
-            <div className="p-4 space-y-4 overflow-y-auto text-xs">
-              {/* Pilihan Provider */}
+            <div className="p-4 space-y-3.5 text-xs">
               <div>
-                <label className="font-bold text-slate-700 block mb-1.5">Pilih Model AI:</label>
-                <div className="grid grid-cols-2 gap-2">
+                <label className="font-bold text-slate-700 block mb-1">Google Gemini API Key:</label>
+                <div className="relative flex items-center">
+                  <input
+                    type={showKey ? 'text' : 'password'}
+                    value={geminiKeyInput}
+                    onChange={(e) => setGeminiKeyInput(e.target.value)}
+                    placeholder="Masukkan Gemini API Key kustom..."
+                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-[11px] focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none pr-8 font-mono"
+                  />
                   <button
                     type="button"
-                    onClick={() => { setProviderState('ollama'); setAiProvider('ollama'); }}
-                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                      provider === 'ollama'
-                        ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 ring-2 ring-indigo-500/20'
-                        : 'border-slate-200 hover:border-slate-300 text-slate-700'
-                    }`}
+                    onClick={() => setShowKey(!showKey)}
+                    className="absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer"
                   >
-                    <div className="font-bold text-[11px] flex items-center gap-1">
-                      <span>🦙 Ollama</span>
-                      {provider === 'ollama' && <Check className="w-3 h-3 text-indigo-600 ml-auto" />}
-                    </div>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Qwen 2.5 3B (Lokal)</p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => { setProviderState('gemini'); setAiProvider('gemini'); }}
-                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                      provider === 'gemini'
-                        ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 ring-2 ring-indigo-500/20'
-                        : 'border-slate-200 hover:border-slate-300 text-slate-700'
-                    }`}
-                  >
-                    <div className="font-bold text-[11px] flex items-center gap-1">
-                      <span>✨ Gemini</span>
-                      {provider === 'gemini' && <Check className="w-3 h-3 text-indigo-600 ml-auto" />}
-                    </div>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Google Cloud 2.5</p>
+                    {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
+                <p className="text-[10px] text-slate-500 mt-1.5 leading-relaxed">
+                  API Key resmi Anda sudah otomatis terpasang dan aktif di cloud Vercel. Anda dapat menggantinya kapan saja jika memiliki API Key lain dari <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-indigo-600 font-semibold underline">Google AI Studio</a>.
+                </p>
               </div>
 
-              {/* Konfigurasi Ollama */}
-              {provider === 'ollama' && (
-                <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <label className="font-bold text-slate-700">URL Ollama / Tunnel:</label>
-                  </div>
-                  <div className="flex gap-1.5">
-                    <input
-                      type="text"
-                      value={ollamaUrlInput}
-                      onChange={(e) => setOllamaUrlInput(e.target.value)}
-                      placeholder="http://localhost:11434 atau https://xxxx.trycloudflare.com"
-                      className="flex-1 px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-[11px] focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleTestOllama}
-                      disabled={isTestingOllama || !ollamaUrlInput.trim()}
-                      className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-[10px] font-bold disabled:opacity-50 flex items-center gap-1 cursor-pointer transition-colors"
-                    >
-                      {isTestingOllama ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Tes'}
-                    </button>
-                  </div>
-
-                  {/* Feedback Status Tes */}
-                  {testResult && (
-                    <div
-                      className={`p-2 rounded-xl text-[10px] leading-tight flex items-start gap-1.5 ${
-                        testResult.success
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                          : 'bg-rose-50 text-rose-800 border border-rose-200'
-                      }`}
-                    >
-                      {testResult.success ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      ) : (
-                        <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
-                      )}
-                      <span>{testResult.message}</span>
-                    </div>
-                  )}
-
-                  {/* Tips Vercel Tunnel */}
-                  <div className="p-2.5 bg-indigo-50/70 border border-indigo-100 rounded-xl text-[10px] text-indigo-900 leading-relaxed">
-                    <p className="font-bold flex items-center gap-1 text-indigo-950">
-                      <Sparkles className="w-3 h-3 text-indigo-600" />
-                      Cara Hubungkan ke Vercel Cloud:
-                    </p>
-                    <ol className="list-decimal list-inside space-y-0.5 mt-1 text-indigo-800">
-                      <li>Jalankan file <code className="bg-indigo-100/90 px-1 py-0.2 rounded font-mono font-bold text-indigo-950">hubungkan-ollama.bat</code> di laptop.</li>
-                      <li>Salin URL HTTPS yang muncul (<code className="font-mono">https://xxxx.trycloudflare.com</code>).</li>
-                      <li>Tempel ke kolom URL di atas, klik <b>Tes</b> lalu <b>Simpan</b>.</li>
-                    </ol>
-                  </div>
-                </div>
-              )}
-
-              {/* Konfigurasi Gemini */}
-              {provider === 'gemini' && (
-                <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <label className="font-bold text-slate-700 block">Google Gemini API Key:</label>
-                  <div className="relative flex items-center">
-                    <input
-                      type={showKey ? 'text' : 'password'}
-                      value={geminiKeyInput}
-                      onChange={(e) => setGeminiKeyInput(e.target.value)}
-                      placeholder="Masukkan Gemini API Key..."
-                      className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-[11px] focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none pr-8"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowKey(!showKey)}
-                      className="absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                    >
-                      {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-slate-500">
-                    Gratis dari Google AI Studio. Berjalan 100% di cloud Vercel tanpa butuh laptop menyala.
-                  </p>
+              {saveSuccess && (
+                <div className="p-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Pengaturan berhasil disimpan!</span>
                 </div>
               )}
             </div>
@@ -451,7 +312,7 @@ export default function AiAssistant({
             <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
               <button
                 type="button"
-                onClick={() => { setShowSettings(false); setTestResult(null); }}
+                onClick={() => setShowSettings(false)}
                 className="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-semibold cursor-pointer transition-colors"
               >
                 Batal
@@ -461,7 +322,7 @@ export default function AiAssistant({
                 onClick={handleSaveSettings}
                 className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs cursor-pointer transition-colors"
               >
-                Simpan & Terapkan
+                Simpan
               </button>
             </div>
           </div>
@@ -517,42 +378,6 @@ export default function AiAssistant({
               >
                 {/* Text Message */}
                 <p className="whitespace-pre-wrap">{cleanText}</p>
-
-                {/* Tombol Bantuan Cepat saat terjadi kendala */}
-                {msg.isError && (
-                  <div className="mt-2.5 pt-2 border-t border-rose-200/60 flex items-center gap-1.5 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setProviderState('ollama');
-                        setAiProvider('ollama');
-                        if (msg.originalPrompt) handleSendMessage(msg.originalPrompt);
-                      }}
-                      className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                    >
-                      <span>🦙 Coba Pakai Ollama</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setProviderState('gemini');
-                        setAiProvider('gemini');
-                        if (msg.originalPrompt) handleSendMessage(msg.originalPrompt);
-                      }}
-                      className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                    >
-                      <span>✨ Coba Pakai Gemini</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowSettings(true)}
-                      className="px-2 py-1 rounded-lg bg-white hover:bg-rose-100 text-rose-800 border border-rose-300 font-semibold text-[10px] flex items-center gap-1 cursor-pointer transition-colors"
-                    >
-                      <Settings className="w-3 h-3" />
-                      <span>Pengaturan</span>
-                    </button>
-                  </div>
-                )}
 
                 {/* AI Extracted Todo Cards */}
                 {hasTodos && (
@@ -660,7 +485,7 @@ export default function AiAssistant({
             </div>
             <div className="bg-white border border-slate-200/80 rounded-2xl rounded-tl-xs p-3 text-xs text-slate-600 flex items-center gap-2 shadow-2xs">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
-              <span>Memproses perintah...</span>
+              <span>Memproses dengan Gemini AI...</span>
             </div>
           </div>
         )}

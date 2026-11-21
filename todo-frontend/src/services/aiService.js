@@ -1,43 +1,8 @@
 /**
  * aiService.js
  * Layanan integrasi AI untuk Kelarin:
- * Mendukung AI Lokal Ollama (Qwen 2.5 3B) TANPA butuh API Key,
- * serta Google Gemini (Cloud) jika diinginkan.
+ * Menggunakan Google Gemini Cloud AI (Cepat, Cerdas, dan Otomatis Aktif di Cloud).
  */
-
-export function getAiProvider() {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('kelarin_ai_provider');
-    if (saved) return saved;
-  }
-  return import.meta.env.VITE_AI_PROVIDER || 'ollama';
-}
-
-export function setAiProvider(provider) {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('kelarin_ai_provider', provider);
-  }
-}
-
-export function getOllamaConfig() {
-  return {
-    url:
-      (typeof window !== 'undefined' ? localStorage.getItem('kelarin_ollama_url') : '') ||
-      import.meta.env.VITE_OLLAMA_URL ||
-      'http://localhost:11434',
-    model:
-      (typeof window !== 'undefined' ? localStorage.getItem('kelarin_ollama_model') : '') ||
-      import.meta.env.VITE_OLLAMA_MODEL ||
-      'qwen2.5:3b',
-  };
-}
-
-export function setOllamaConfig(url, model) {
-  if (typeof window !== 'undefined') {
-    if (url) localStorage.setItem('kelarin_ollama_url', url);
-    if (model) localStorage.setItem('kelarin_ollama_model', model);
-  }
-}
 
 const ENCODED_DEFAULT_KEY = 'QVEuQWI4Uk42SmZ3OGJvUUM1d3J0VTJsekJleFc4b1BwVkhsclJXWVctQXlfdmZnaTBhaVE=';
 
@@ -67,63 +32,6 @@ export function setGeminiApiKey(key) {
 }
 
 /**
- * Cek apakah Ollama lokal/tunnel aktif dan merespons
- */
-export async function checkOllamaStatus(customUrl) {
-  const url = (customUrl || getOllamaConfig().url || 'http://localhost:11434').trim().replace(/\/+$/, '');
-  const isLocalhost =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' ||
-     window.location.hostname === '127.0.0.1' ||
-     window.location.hostname === '');
-
-  // 1. Jika di cloud Vercel, tes via serverless proxy /api/ai/status agar bebas dari blokir Mixed-Content/CORS
-  if (!isLocalhost) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
-      const res = await fetch('/api/ai/status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-ollama-url': url,
-        },
-        body: JSON.stringify({ url }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        const data = await res.json();
-        return data;
-      }
-    } catch {
-      // lanjut ke direct fetch
-    }
-  }
-
-  // 2. Direct fetch (berfungsi jika frontend diakses via localhost)
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-    const res = await fetch(`${url}/api/tags`, {
-      headers: {
-        'bypass-tunnel-reminder': 'true',
-        'ngrok-skip-browser-warning': 'true',
-      },
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-    if (res.ok) {
-      const data = await res.json();
-      return { online: true, models: (data.models || []).map((m) => m.name) };
-    }
-    return { online: false, models: [], error: `Status ${res.status}` };
-  } catch (err) {
-    return { online: false, models: [], error: err.message };
-  }
-}
-
-/**
  * Membersihkan simbol markdown yang mengganggu (seperti **, *, _, #, dll)
  */
 export function stripMarkdownSymbols(text) {
@@ -149,67 +57,64 @@ function getCurrentDateTimeContext() {
   const hours = String(now.getHours()).padStart(2, '0');
   const minutes = String(now.getMinutes()).padStart(2, '0');
 
-  const daysIndo = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-  const monthsIndo = [
+  const daysOfWeek = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const months = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
   ];
 
-  const dayName = daysIndo[now.getDay()];
-  const monthName = monthsIndo[now.getMonth()];
+  const dayName = daysOfWeek[now.getDay()];
+  const monthName = months[now.getMonth()];
 
   return {
     isoDate: `${year}-${month}-${day}`,
-    isoDateTime: `${year}-${month}-${day}T${hours}:${minutes}`,
-    readable: `${dayName}, ${day} ${monthName} ${year} pukul ${hours}:${minutes} WIB`,
-    year,
-    month,
-    day,
-    hours,
-    minutes,
+    currentTime: `${hours}:${minutes}`,
+    currentDateTimeStr: `${year}-${month}-${day}T${hours}:${minutes}`,
+    readableDate: `${dayName}, ${day} ${monthName} ${year} pukul ${hours}:${minutes} WIB`,
   };
 }
 
 /**
- * Buat instruksi sistem yang tajam dan terstruktur
+ * Prompt instruksi sistem untuk Google Gemini
  */
 function buildSystemInstruction(dt, activeTodosSummary) {
-  return `Kamu adalah "Kelarin AI", asisten pintar, ramah, dan proaktif di dalam aplikasi To-Do List modern "Kelarin".
+  return `Anda adalah "Kelarin AI", asisten pintar pencatat to-do list & manajemen tugas harian yang ramah, ringkas, dan proaktif.
 
-KONTEKS WAKTU SISTEM SAAT INI:
-- Waktu Lokal: ${dt.readable}
-- Format Tanggal Hari Ini (ISO): ${dt.isoDate}
-- Format Tanggal & Jam Sekarang (ISO): ${dt.isoDateTime}
+INFORMASI WAKTU SISTEM SAAT INI (Gunakan sebagai acuan mutlak untuk menghitung tanggal relatif):
+- Waktu Sekarang: ${dt.readableDate}
+- Tanggal ISO: ${dt.isoDate}
+- Jam: ${dt.currentTime}
 
-DAFTAR TUGAS PENGGUNA SAAT INI:
+DAFTAR TUGAS AKTIF SAAT INI:
 ${activeTodosSummary || '(Belum ada tugas)'}
 
-TUGAS UTAMAMU:
-1. Membantu pengguna menambahkan tugas baru melalui perintah bahasa alami (natural language).
-   - Pengguna bisa meminta dalam bahasa Indonesia santai atau formal, misalnya:
-     * "Besok jam 9 pagi tolong ingatkan bikin laporan, prioritas high, notif 30 menit"
-     * "Tambahkan tugas cuci motor nanti sore jam 17:00"
-2. Membantu menjawab pertanyaan tentang tugas pengguna (misal: "Apa tugas yang paling mendesak?").
+TUGAS DAN ATURAN ANDA:
+1. Jika pengguna ingin menambahkan, menjadwalkan, atau mencatat tugas (misal: "ingatkan saya rapat besok jam 9 pagi"):
+   - Ekstrak tugas tersebut ke dalam array "todos".
+   - Hitung tanggal secara presisi dari tanggal sistem saat ini (${dt.isoDate}).
+   - Buat balasan ramah dan sangat ringkas di field "reply" (maksimal 1-2 kalimat).
+   - Set "action" ke "create_todos".
+2. Jika pengguna hanya bertanya, menyapa, atau mengecek daftar tugas (misal: "apa tugas saya yang paling mendesak?"):
+   - Berikan jawaban yang membantu dan to-the-point di field "reply".
+   - Set "action" ke "chat" dan "todos" kosong [].
 
-ATURAN EKSTRAKSI TUGAS (action: "create_todos"):
-- Jika pengguna meminta menambahkan satu atau beberapa tugas, ekstrak ke dalam array "todos".
-- Tiap item dalam "todos" HARUS memiliki properti:
-  * "title": String nama tugas ringkas, jelas, huruf kapital di awal.
-  * "priority": Salah satu dari "high" | "medium" | "low". Default ke "medium" jika tidak disebut secara spesifik.
-  * "due_date": String ISO format "YYYY-MM-DDTHH:mm".
-    - Jika pengguna menyebut "besok jam 9 pagi", hitung tanggal besok dari tanggal sistem ${dt.isoDate} dan format "YYYY-MM-DDT09:00".
-    - Jika pengguna menyebut "lusa", tambahkan 2 hari dari tanggal sistem.
-    - Jika pengguna menyebut "nanti sore jam 17:00", gunakan tanggal hari ini ${dt.isoDate} dan jam 17:00.
-    - Jika pengguna tidak menyebut jam, default ke jam "23:59".
-  * "reminder": Salah satu dari "1h" | "30m" | "5m" | "none". Default ke "30m" jika ada due_date, atau "none" jika tidak ditentukan.
+ATURAN FIELD TUGAS (todos):
+* "title": String nama tugas yang ringkas, diawali huruf kapital.
+* "priority": "high" | "medium" | "low". Default ke "medium" jika tidak disebut spesifik.
+* "due_date": Format string ISO "YYYY-MM-DDTHH:mm".
+  - "besok jam 09:00" -> format besok dari ${dt.isoDate} jam 09:00.
+  - "lusa" -> tambahkan 2 hari.
+  - "nanti sore jam 17:00" -> tanggal hari ini (${dt.isoDate}) jam 17:00.
+  - Tanpa jam -> default ke "23:59".
+* "reminder": "1h" | "30m" | "5m" | "none". Default ke "30m" jika ada due_date.
 
-FORMAT OUTPUT WAJIB (JSON murni tanpa markdown):
+FORMAT OUTPUT WAJIB (JSON murni):
 {
-  "reply": "Pesan balasan sangat singkat (cukup 1 kalimat pendek, to the point)",
+  "reply": "Pesan balasan sangat singkat (cukup 1-2 kalimat).",
   "action": "create_todos" atau "chat",
   "todos": [
     {
-      "title": "Judul Tugas",
+      "title": "Nama Tugas",
       "priority": "high" | "medium" | "low",
       "due_date": "YYYY-MM-DDTHH:mm",
       "reminder": "1h" | "30m" | "5m" | "none"
@@ -219,137 +124,7 @@ FORMAT OUTPUT WAJIB (JSON murni tanpa markdown):
 }
 
 /**
- * Eksekusi perintah menggunakan Ollama Lokal (Qwen 2.5 3B)
- */
-export async function sendOllamaCommand(userPrompt, currentTodos = [], chatHistory = []) {
-  const { url, model } = getOllamaConfig();
-  const dt = getCurrentDateTimeContext();
-
-  const activeTodosSummary = currentTodos
-    .slice(0, 15)
-    .map((t) => {
-      const status = t.is_completed ? 'Selesai' : 'Belum Selesai';
-      const due = t.due_date ? `Tenggat: ${t.due_date}` : 'Tanpa tenggat';
-      return `- [ID:${t.id}] ${t.title} (Prioritas: ${t.priority}, ${status}, ${due}, Reminder: ${t.reminder || 'none'})`;
-    })
-    .join('\n');
-
-  const systemInstruction = buildSystemInstruction(dt, activeTodosSummary);
-
-  const messages = [
-    { role: 'system', content: systemInstruction },
-  ];
-
-  chatHistory.slice(-4).forEach((h) => {
-    messages.push({
-      role: h.role === 'user' ? 'user' : 'assistant',
-      content: typeof h.text === 'string' ? h.text : JSON.stringify(h.text),
-    });
-  });
-
-  messages.push({ role: 'user', content: userPrompt });
-
-  const isLocalhost =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' ||
-     window.location.hostname === '127.0.0.1' ||
-     window.location.hostname === '');
-
-  const apiBase = import.meta.env.VITE_API_URL || (!isLocalhost ? '/api' : 'http://localhost:8080/api');
-
-  const candidateEndpoints = [
-    // 1. Backend proxy (Go lokal atau Vercel Cloud)
-    `${apiBase.replace(/\/+$/, '')}/ai/chat`,
-    // 2. Vite dev proxy
-    '/api/ollama/api/chat',
-    // 3. Direct Ollama / Tunnel
-    `${url.replace(/\/+$/, '')}/api/chat`,
-  ];
-
-  const payload = {
-    model,
-    messages,
-    stream: false,
-    format: 'json',
-    ollama_url: url,
-    options: {
-      temperature: 0.2,
-    },
-  };
-
-  let response = null;
-  let lastErrorMsg = null;
-
-  for (const endpoint of candidateEndpoints) {
-    try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-ollama-url': url,
-          'bypass-tunnel-reminder': 'true',
-          'ngrok-skip-browser-warning': 'true',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        response = res;
-        break;
-      } else {
-        const errJson = await res.json().catch(() => null);
-        if (errJson?.error) {
-          lastErrorMsg = errJson.error;
-        }
-      }
-    } catch {
-      continue;
-    }
-  }
-
-  if (!response) {
-    if (lastErrorMsg) {
-      throw new Error(lastErrorMsg);
-    }
-    throw new Error(
-      `Tidak dapat terhubung ke Ollama (${url}). ` +
-      `Jika Anda mengakses website ini dari Vercel Cloud, jalankan 'hubungkan-ollama.bat' di laptop Anda ` +
-      `lalu masukkan URL HTTPS yang muncul ke Pengaturan AI (⚙️), atau gunakan mode Gemini AI.`
-    );
-  }
-
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => '');
-    throw new Error(`Ollama gagal merespons (${response.status}): ${errorText || response.statusText}`);
-  }
-
-  const data = await response.json();
-  const rawText = data.message?.content;
-
-  if (!rawText) {
-    throw new Error('Tidak ada respons teks yang diterima dari Ollama Qwen.');
-  }
-
-  try {
-    const cleaned = rawText.trim().replace(/^```json\s*/i, '').replace(/\s*```$/i, '');
-    const parsed = JSON.parse(cleaned);
-    return {
-      reply: stripMarkdownSymbols(parsed.reply) || 'Tugas telah disiapkan.',
-      action: parsed.action || (parsed.todos?.length > 0 ? 'create_todos' : 'chat'),
-      todos: Array.isArray(parsed.todos) ? parsed.todos : [],
-    };
-  } catch (parseErr) {
-    console.error('Gagal mem-parse JSON dari Ollama:', rawText, parseErr);
-    return {
-      reply: stripMarkdownSymbols(rawText) || 'Perintah berhasil diproses.',
-      action: 'chat',
-      todos: [],
-    };
-  }
-}
-
-/**
- * Eksekusi perintah menggunakan Google Gemini API
+ * Eksekusi perintah menggunakan Google Gemini API (Cloud)
  */
 export async function sendGeminiCommand(userPrompt, currentTodos = [], chatHistory = []) {
   const apiKey = getGeminiApiKey();
@@ -380,7 +155,7 @@ export async function sendGeminiCommand(userPrompt, currentTodos = [], chatHisto
       parts: [
         {
           text: JSON.stringify({
-            reply: 'Siap! Saya Kelarin AI. Mau catat atau cek tugas apa?',
+            reply: 'Siap! Saya Kelarin AI. Mau catat atau cek tugas apa hari ini?',
             action: 'chat',
             todos: [],
           }),
@@ -448,7 +223,7 @@ export async function sendGeminiCommand(userPrompt, currentTodos = [], chatHisto
   }
 
   if (!result) {
-    throw lastError || new Error('Gagal menghubungi Gemini AI.');
+    throw lastError || new Error('Gagal menghubungi Google Gemini AI.');
   }
 
   const rawText = result.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -465,7 +240,7 @@ export async function sendGeminiCommand(userPrompt, currentTodos = [], chatHisto
       todos: Array.isArray(parsed.todos) ? parsed.todos : [],
     };
   } catch (parseErr) {
-    console.error('Gagal mem-parse JSON dari Gemini:', rawText, parseErr);
+    console.error('Gagal parse JSON Gemini:', rawText, parseErr);
     return {
       reply: stripMarkdownSymbols(rawText) || 'Perintah berhasil diproses.',
       action: 'chat',
@@ -475,29 +250,8 @@ export async function sendGeminiCommand(userPrompt, currentTodos = [], chatHisto
 }
 
 /**
- * Fungsi utama sendAiCommand:
- * Otomatis menggunakan Ollama jika provider = 'ollama' atau jika API key Gemini belum diisi.
+ * Entry point tunggal untuk mengeksekusi perintah AI
  */
 export async function sendAiCommand(userPrompt, currentTodos = [], chatHistory = []) {
-  const provider = getAiProvider();
-
-  // Jika eksplisit memilih Ollama
-  if (provider === 'ollama') {
-    return await sendOllamaCommand(userPrompt, currentTodos, chatHistory);
-  }
-
-  // Jika memilih Gemini
-  const geminiKey = getGeminiApiKey();
-  if (!geminiKey) {
-    // Fallback cerdas: jika Gemini key kosong, langsung gunakan Ollama lokal agar pengguna tidak error!
-    try {
-      return await sendOllamaCommand(userPrompt, currentTodos, chatHistory);
-    } catch (ollamaErr) {
-      throw new Error(
-        'Google Gemini API Key belum dikonfigurasi dan Ollama lokal tidak aktif. Silakan jalankan Ollama di laptop Anda.'
-      );
-    }
-  }
-
   return await sendGeminiCommand(userPrompt, currentTodos, chatHistory);
 }

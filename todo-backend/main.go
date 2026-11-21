@@ -66,7 +66,6 @@ func main() {
 		api.PUT("/todos/:id", controllers.UpdateTodo)
 		api.DELETE("/todos/completed", controllers.ClearCompletedTodos)
 		api.DELETE("/todos/:id", controllers.DeleteTodo)
-		api.POST("/ai/chat", controllers.ProxyOllamaChat)
 	}
 
 	// 6. Jalankan Server (Port dinamis dari environment variable untuk Render/Railway/Heroku atau default :8080)
