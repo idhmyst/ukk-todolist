@@ -102,20 +102,30 @@ export default function App() {
     showToast('Melodi nada dering pengingat berhasil dibunyikan! 🔔', 'success');
   };
 
-  // Fetch todos dari Golang REST API
-  const fetchTodosData = useCallback(async (isInitial = false) => {
-    if (isInitial) setIsLoading(true);
-    setErrorMessage(null);
+  // Fetch todos dari REST API dengan Auto-Retry jika database sedang bangun dari suspend
+  const fetchTodosData = useCallback(async (isInitial = false, retryCount = 0) => {
+    if (isInitial && retryCount === 0) setIsLoading(true);
+    if (retryCount === 0) setErrorMessage(null);
 
     try {
       const data = await getTodos();
       setTodos(data);
       setIsBackendOnline(true);
+      setErrorMessage(null);
     } catch (err) {
+      // Jika gagal pada percobaan awal (biasanya karena database Neon cold-start dari sleep mode), coba lagi otomatis
+      if (retryCount < 2) {
+        setTimeout(() => {
+          fetchTodosData(isInitial, retryCount + 1);
+        }, 1500);
+        return;
+      }
       setIsBackendOnline(false);
-      setErrorMessage(err.message || 'Gagal terhubung ke REST API Golang.');
+      setErrorMessage(err.message || 'Gagal terhubung ke server backend.');
     } finally {
-      setIsLoading(false);
+      if (retryCount === 0 || retryCount >= 2) {
+        setIsLoading(false);
+      }
     }
   }, []);
 

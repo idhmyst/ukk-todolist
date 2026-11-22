@@ -34,7 +34,7 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
-  timeout: 10000,
+  timeout: 15000,
 });
 
 /**
@@ -120,8 +120,20 @@ export const clearCompletedTodos = async (completedIds = []) => {
  */
 function handleApiError(error) {
   if (error.code === 'ERR_NETWORK' || !error.response) {
+    const isCloud =
+      typeof window !== 'undefined' &&
+      window.location.hostname !== 'localhost' &&
+      window.location.hostname !== '127.0.0.1' &&
+      window.location.hostname !== '';
+
+    if (isCloud) {
+      return new Error(
+        'Koneksi ke database cloud sedang memuat ulang atau koneksi internet terputus. Silakan klik "Coba Lagi".'
+      );
+    }
+
     return new Error(
-      `Tidak dapat terhubung ke server backend (${API_BASE_URL}). Pastikan server backend dan database sudah berjalan.`
+      `Tidak dapat terhubung ke server backend lokal (${API_BASE_URL}). Pastikan server Go sudah berjalan.`
     );
   }
   const backendMsg = error.response?.data?.error || error.response?.data?.message;

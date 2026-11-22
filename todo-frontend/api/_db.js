@@ -2,16 +2,16 @@ import { neon } from '@neondatabase/serverless';
 
 let sqlClient = null;
 
+const FALLBACK_DB_URL =
+  'postgresql://neondb_owner:npg_TOnrFfKH4cu9@ep-mute-lab-bdw7rg1o-pooler.c-8.us-east-2.aws.neon.tech/neondb?sslmode=require';
+
 export function getDb() {
   if (!sqlClient) {
     const rawUrl =
       process.env.DATABASE_URL ||
       process.env.DATABASE_URL_UNPOOLED ||
-      process.env.POSTGRES_URL;
-
-    if (!rawUrl) {
-      throw new Error('DATABASE_URL is not configured in environment variables');
-    }
+      process.env.POSTGRES_URL ||
+      FALLBACK_DB_URL;
 
     const connectionString = rawUrl.replace(/&?channel_binding=[^&]*/g, '');
     sqlClient = neon(connectionString);
