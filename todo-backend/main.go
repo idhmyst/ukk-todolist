@@ -21,27 +21,21 @@ func main() {
 	r := gin.Default()
 
 	// 3. Konfigurasi Middleware CORS untuk Frontend
-	// Mendukung localhost serta Cloud Frontend (seperti Vercel / Netlify / Custom Domain)
-	allowedOrigins := []string{
-		"http://localhost:5173",
-		"http://localhost:5174",
-		"http://localhost:3000",
-		"http://127.0.0.1:5173",
-		"http://127.0.0.1:5174",
-		"https://kelarin-eight.vercel.app",
-	}
-
-	// Tambahkan FRONTEND_URL dari environment variable jika ada (misal di-deploy ke Vercel)
-	if customFrontend := os.Getenv("FRONTEND_URL"); customFrontend != "" {
-		for _, origin := range strings.Split(customFrontend, ",") {
-			if trimmed := strings.TrimSpace(origin); trimmed != "" {
-				allowedOrigins = append(allowedOrigins, trimmed)
-			}
-		}
-	}
-
+	// Mendukung localhost, IP jaringan lokal (WiFi LAN), serta Cloud Frontend Vercel
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     allowedOrigins,
+		AllowOriginFunc: func(origin string) bool {
+			if origin == "" ||
+				strings.HasPrefix(origin, "http://localhost:") ||
+				strings.HasPrefix(origin, "http://127.0.0.1:") ||
+				strings.HasPrefix(origin, "http://192.168.") ||
+				strings.HasPrefix(origin, "http://10.") ||
+				strings.HasPrefix(origin, "http://172.") ||
+				strings.Contains(origin, "vercel.app") ||
+				origin == "https://kelarin-eight.vercel.app" {
+				return true
+			}
+			return false
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With"},
 		ExposeHeaders:    []string{"Content-Length"},

@@ -1,146 +1,234 @@
-import axios from 'axios';
+/**
+ * REST API Client untuk Kelarin (To-Do List)
+ * Dilengkapi dengan Smart Multi-Tier Failover:
+ * 1. Menghubungi Go Backend lokal jika berjalan (http://localhost:8080/api)
+ * 2. Menghubungi Vite Dev Proxy (/api)
+ * 3. Otomatis failover ke Live Cloud Serverless + Neon PostgreSQL (https://kelarin-eight.vercel.app/api)
+ *
+ * Dengan arsitektur failover ini, aplikasi otomatis berjalan lancar dimanapun
+ * tanpa mengharuskan pengguna menyalakan backend secara manual.
+ */
 
-// Base URL REST API: Otomatis gunakan /api di Vercel cloud, atau http://localhost:8080/api saat dev lokal
-const getBaseUrl = () => {
-  // 1. Jika diakses melalui browser di Vercel cloud (bukan localhost), SELALU gunakan Serverless API (/api)
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '';
-    if (!isLocalhost) {
-      return '/api';
+const CLOUD_API_URL = 'https://kelarin-eight.vercel.app/api';
+
+// Deteksi apakah sedang berjalan di environment lokal (localhost / WiFi LAN IP)
+function isLocalEnvironment() {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname || '';
+  const port = window.location.port || '';
+  return (
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '' ||
+    host.startsWith('192.168.') ||
+    host.startsWith('10.') ||
+    host.startsWith('172.') ||
+    host.endsWith('.local') ||
+    port === '5173' ||
+    port === '5174' ||
+    port === '3000'
+  );
+}
+
+// Menentukan daftar kandidat base URL sesuai urutan prioritas
+function getCandidateBaseUrls() {
+  const isLocal = isLocalEnvironment();
+
+  // Cek custom VITE_API_URL jika ditentukan
+  const envUrl = (import.meta.env.VITE_API_URL || '').trim();
+  const validEnvUrl =
+    envUrl &&
+    !envUrl.includes('onrender.com') &&
+    !envUrl.includes('nama-backend') &&
+    !envUrl.includes('example.com')
+      ? envUrl.replace(/\/$/, '')
+      : null;
+
+  if (isLocal) {
+    const list = [];
+    if (validEnvUrl) list.push(validEnvUrl);
+    list.push('http://localhost:8080/api');
+    list.push('/api');
+    list.push(CLOUD_API_URL);
+    return Array.from(new Set(list));
+  }
+
+  // Cloud (Vercel)
+  const list = ['/api'];
+  if (typeof window !== 'undefined' && window.location.origin) {
+    list.push(`${window.location.origin}/api`);
+  }
+  list.push(CLOUD_API_URL);
+  return Array.from(new Set(list));
+}
+
+// Menyimpan base URL yang sedang aktif & terbukti berhasil
+let activeBaseUrl = null;
+
+/**
+ * Melakukan HTTP request dengan automatic multi-candidate failover
+ */
+async function requestWithFailover(path, options = {}) {
+  const method = (options.method || 'GET').toUpperCase();
+  const body = options.body ? JSON.stringify(options.body) : undefined;
+  const headers = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    ...(options.headers || {}),
+  };
+
+  const candidates = getCandidateBaseUrls();
+  const orderedCandidates = activeBaseUrl
+    ? [activeBaseUrl, ...candidates.filter((c) => c !== activeBaseUrl)]
+    : candidates;
+
+  let lastError = null;
+
+  for (let i = 0; i < orderedCandidates.length; i++) {
+    const candidate = orderedCandidates[i];
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    const url = `${candidate.replace(/\/$/, '')}${cleanPath}`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers,
+        body,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      // Cek apakah response berupa JSON
+      const contentType = response.headers.get('content-type') || '';
+      const isJson = contentType.includes('application/json');
+
+      // Jika response bukan JSON (misal HTML atau JS dari dev server yang salah rute), coba kandidat berikutnya
+      if (!isJson && response.status < 400) {
+        lastError = new Error('Respons server bukan JSON valid.');
+        continue;
+      }
+
+      const data = isJson ? await response.json().catch(() => null) : null;
+
+      if (!response.ok) {
+        // Jika error validasi client (400, 404, 422), jangan failover karena error berasal dari payload
+        if (response.status >= 400 && response.status < 500) {
+          activeBaseUrl = candidate;
+          const msg = data?.error || data?.message || `Request gagal (${response.status})`;
+          throw new Error(msg);
+        }
+
+        // Server error (500, 502, 503, 504): coba kandidat berikutnya
+        lastError = new Error(data?.error || data?.message || `Server error (${response.status})`);
+        continue;
+      }
+
+      // Berhasil! Simpan kandidat ini untuk request berikutnya
+      activeBaseUrl = candidate;
+      return data;
+    } catch (err) {
+      clearTimeout(timeoutId);
+
+      // Jika error validasi client (misal: "Field 'title' wajib diisi"), langsung lemparkan
+      if (err.message && !err.message.includes('failed to fetch') && !err.message.includes('NetworkError') && !err.message.includes('aborted') && !err.message.includes('Server error')) {
+        // Error bisnis dari server
+        if (err.message.startsWith('Field') || err.message.startsWith('Tenggat')) {
+          throw err;
+        }
+      }
+
+      lastError = err;
+      // Lanjut ke kandidat endpoint berikutnya
     }
   }
 
-  // 2. Jika di localhost dan ada custom VITE_API_URL yang bukan dummy Render
-  const customUrl = (import.meta.env.VITE_API_URL || '').trim();
-  if (
-    customUrl &&
-    !customUrl.includes('onrender.com') &&
-    !customUrl.includes('nama-backend') &&
-    !customUrl.includes('example.com')
-  ) {
-    return customUrl;
+  // Jika semua kandidat gagal:
+  const isCloud = !isLocalEnvironment();
+  if (isCloud) {
+    throw new Error(
+      'Koneksi ke database cloud sedang memuat ulang. Silakan klik "Coba Lagi".'
+    );
   }
 
-  // 3. Default saat development di laptop
-  return 'http://localhost:8080/api';
-};
-
-const API_BASE_URL = getBaseUrl();
-
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-  timeout: 15000,
-});
+  throw new Error(
+    lastError?.message ||
+      'Tidak dapat terhubung ke server backend. Pastikan server atau koneksi internet Anda aktif.'
+  );
+}
 
 /**
- * Mengambil seluruh daftar to-do dari backend
- * GET http://localhost:8080/api/todos
+ * Mengambil seluruh daftar to-do
+ * GET /todos
  * Response: { "data": [ ... ] }
  */
 export const getTodos = async () => {
-  try {
-    const response = await apiClient.get('/todos');
-    return response.data?.data || [];
-  } catch (error) {
-    throw handleApiError(error);
-  }
+  const result = await requestWithFailover('/todos', { method: 'GET' });
+  return result?.data || [];
 };
 
 /**
  * Membuat to-do baru
- * POST http://localhost:8080/api/todos
+ * POST /todos
  * Payload: { "title": string, "priority": string, "due_date": string, "reminder": string }
  */
 export const createTodo = async (title, priority = 'medium', dueDate = '', reminder = '30m') => {
-  try {
-    const response = await apiClient.post('/todos', {
-      title: title.trim(),
-      priority,
+  const result = await requestWithFailover('/todos', {
+    method: 'POST',
+    body: {
+      title: (title || '').trim(),
+      priority: priority || 'medium',
       due_date: dueDate || '',
       reminder: reminder || '30m',
-    });
-    return response.data?.data;
-  } catch (error) {
-    throw handleApiError(error);
-  }
+    },
+  });
+  return result?.data;
 };
 
 /**
  * Mengupdate status to-do atau data tugas (title, priority, due_date, is_completed)
- * PUT http://localhost:8080/api/todos/:id
+ * PUT /todos/:id
  * Payload: { is_completed?: boolean, title?: string, priority?: string, due_date?: string }
  */
 export const updateTodo = async (id, payload) => {
-  try {
-    const response = await apiClient.put(`/todos/${id}`, payload);
-    return response.data?.data;
-  } catch (error) {
-    throw handleApiError(error);
-  }
+  const result = await requestWithFailover(`/todos/${id}`, {
+    method: 'PUT',
+    body: payload,
+  });
+  return result?.data;
 };
 
 /**
  * Menghapus to-do berdasarkan ID
- * DELETE http://localhost:8080/api/todos/:id
+ * DELETE /todos/:id
  */
 export const deleteTodo = async (id) => {
-  try {
-    const response = await apiClient.delete(`/todos/${id}`);
-    return response.data;
-  } catch (error) {
-    throw handleApiError(error);
-  }
+  return await requestWithFailover(`/todos/${id}`, { method: 'DELETE' });
 };
 
 /**
  * Membersihkan seluruh tugas yang sudah selesai
- * DELETE http://localhost:8080/api/todos/completed (dengan fallback parallel delete)
+ * DELETE /todos/completed (dengan fallback parallel delete)
  */
 export const clearCompletedTodos = async (completedIds = []) => {
   try {
-    const response = await apiClient.delete('/todos/completed');
-    return response.data;
+    return await requestWithFailover('/todos/completed', { method: 'DELETE' });
   } catch (error) {
-    // Fallback: hapus per-ID jika endpoint massal tidak didukung server
     if (completedIds.length > 0) {
-      await Promise.all(completedIds.map((id) => apiClient.delete(`/todos/${id}`)));
+      await Promise.all(completedIds.map((id) => deleteTodo(id)));
       return { message: 'Semua tugas selesai berhasil dibersihkan' };
     }
-    throw handleApiError(error);
+    throw error;
   }
 };
 
-/**
- * Penanganan dan standardisasi pesan error
- */
-function handleApiError(error) {
-  if (error.code === 'ERR_NETWORK' || !error.response) {
-    const isCloud =
-      typeof window !== 'undefined' &&
-      window.location.hostname !== 'localhost' &&
-      window.location.hostname !== '127.0.0.1' &&
-      window.location.hostname !== '';
-
-    if (isCloud) {
-      return new Error(
-        'Koneksi ke database cloud sedang memuat ulang atau koneksi internet terputus. Silakan klik "Coba Lagi".'
-      );
-    }
-
-    return new Error(
-      `Tidak dapat terhubung ke server backend lokal (${API_BASE_URL}). Pastikan server Go sudah berjalan.`
-    );
-  }
-  const backendMsg = error.response?.data?.error || error.response?.data?.message;
-  if (backendMsg) {
-    return new Error(backendMsg);
-  }
-  return new Error(error.message || 'Terjadi kesalahan komunikasi dengan server backend.');
-}
-
-export default apiClient;
+export default {
+  getTodos,
+  createTodo,
+  updateTodo,
+  deleteTodo,
+  clearCompletedTodos,
+};
