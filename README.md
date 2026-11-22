@@ -18,13 +18,13 @@ Dibangun khusus untuk memenuhi standar penilaian **Uji Kompetensi Keahlian (UKK)
 1. [Latar Belakang & Gambaran Umum](#-latar-belakang--gambaran-umum)
 2. [Arsitektur Sistem (Dual-Engine Architecture)](#-arsitektur-sistem-dual-engine-architecture)
 3. [Fitur-Fitur Unggulan](#-fitur-fitur-unggulan)
-4. [Teknologi yang Digunakan (Tech Stack)](#-teknologi-yang-digunakan-tech-stack)
+4. [Framework & Teknologi yang Digunakan (Tech Stack)](#-framework--teknologi-yang-digunakan-tech-stack)
 5. [Skema & Struktur Database (PostgreSQL)](#-skema--struktur-database-postgresql)
 6. [Dokumentasi REST API](#-dokumentasi-rest-api)
 7. [Panduan Menjalankan Aplikasi di Laptop (Local Setup)](#-panduan-menjalankan-aplikasi-di-laptop-local-setup)
 8. [Arsitektur Cloud Deployment (Vercel + Neon)](#-arsitektur-cloud-deployment-vercel--neon)
-9. [Cara Kerja Kelarin AI (Google Gemini NLP)](#-cara-kerja-kelarin-ai-google-gemini-nlp)
-10. [🎯 PANDUAN SIDANG UKK: Kunci Jawaban Pertanyaan Penguji / Mentor](#-panduan-sidang-ukk-kunci-jawaban-pertanyaan-penguji--mentor)
+9. [Cara Kerja Kelarin AI (Groq LPU & Gemini NLP)](#-cara-kerja-kelarin-ai-groq-lpu--google-gemini-nlp)
+10. [🎯 PANDUAN SIDANG UKK: Alur Demo & Kunci Jawaban Penguji](#-panduan-sidang-ukk-kunci-jawaban-pertanyaan-penguji--mentor)
 
 ---
 
@@ -67,10 +67,11 @@ Aplikasi ini menggunakan arsitektur **Dual-Engine** yang memisahkan frontend dar
                                       |      (AWS us-east-2)          |
                                       +-------------------------------+
                                                       ^
-                                                      |
+                                                      | (Koneksi API HTTPS)
                                       +---------------+---------------+
-                                      |   GOOGLE GEMINI CLOUD AI      |
-                                      |   Models: gemini-3.5-flash    |
+                                      |      DUAL-ENGINE CLOUD AI     |
+                                      |  ⚡ Groq LPU (Speed < 1s)     |
+                                      |  ✨ Google Gemini (DeepMind)  |
                                       +-------------------------------+
 ```
 
@@ -89,11 +90,14 @@ Aplikasi ini menggunakan arsitektur **Dual-Engine** yang memisahkan frontend dar
 * **Update**: Mengubah judul, tanggal deadline, prioritas, serta mengubah status checklist tugas secara instan.
 * **Delete**: Menghapus tugas per-item atau membersihkan seluruh tugas yang sudah selesai (*bulk clear completed*).
 
-### 2. Kelarin AI Assistant (Google Gemini Cloud)
-* Mengerti bahasa Indonesia sehari-hari untuk penjadwalan otomatis.
-* Menghitung tanggal relatif (*"besok"*, *"lusa"*, *"nanti sore jam 5"*) secara presisi berdasarkan tanggal dan jam sistem waktu nyata.
-* Mengembalikan data tugas terstruktur (*Structured JSON*) yang langsung dapat dimasukkan ke database dengan 1 klik tombol *"+ Tambah"*.
-* Dilengkapi antarmuka **Floating Capsule Launcher** (tombol melayang) dan mode **Minimize** yang tidak menutupi daftar tugas.
+### 2. Kelarin AI Assistant (Dual AI Engine: Groq LPU & Gemini)
+* **Kecepatan Inferensi Ultra-Cepat**: Menggunakan Groq LPU dengan waktu pemrosesan di bawah 1 detik (< 1s).
+* **Live Status & Typing Indicator**: Status header menampilkan indikator real-time `● Online`, dan saat AI sedang berpikir, muncul animasi *bouncing dots* dan teks *"Sedang mengetik..."* baik di header maupun di dalam bubble chat.
+* **Instant Engine Switcher**: Pengguna dapat berpindah engine antara **⚡ Groq LPU** dan **✨ Gemini** cukup dengan 1 klik tombol badge di header.
+* **Pemahaman Bahasa Alami (NLP)**: Mengerti bahasa Indonesia santai sehari-hari untuk penjadwalan otomatis tanpa perlu mengisi form panjang.
+* **Kalkulasi Tanggal Presisi**: Menghitung tanggal relatif (*"besok"*, *"lusa"*, *"nanti sore jam 5"*) secara matematis berdasarkan jam lokal sistem waktu nyata.
+* **Structured Output JSON**: Mengembalikan data tugas terstruktur yang langsung dapat dimasukkan ke database dengan 1 klik tombol *"+ Tambah"*.
+* **Floating Launcher & Mode Minimize**: AI dapat di-minimize ke tombol melayang agar tidak menutupi daftar tugas saat pengguna bekerja di layar kecil/mobile.
 
 ### 3. Proteksi Berlapis Anti-Tanggal Lampau
 * **Client-side**: Input datetime membatasi tanggal minimal (`min={currentDateTime}`) sehingga tanggal kemarin tidak dapat dipilih di kalender browser.
@@ -339,7 +343,42 @@ npm run dev
 
 ## 🎯 PANDUAN SIDANG UKK: Kunci Jawaban Pertanyaan Penguji / Mentor
 
-Gunakan panduan tanya-jawab ini saat presentasi di depan guru penguji atau mentor industri:
+Gunakan panduan ini sebagai pegangan lengkap saat presentasi di depan guru penguji atau mentor industri.
+
+---
+
+### 🎬 Panduan Praktik Demo Presentasi di Depan Guru (Langkah Demi Langkah)
+
+Ikuti urutan demo berikut saat Anda berdiri di depan laptop atau proyektor:
+
+#### 1. Tahap Pembukaan (Greeting & Live Demo)
+* **Aksi**: Buka browser ke alamat [https://kelarin-eight.vercel.app](https://kelarin-eight.vercel.app).
+* **Kalimat Anda**:
+  > *"Selamat pagi/siang Bapak/Ibu guru penguji. Perkenalkan saya Idham Baihaqi dari jurusan PPLG SMK Telkom. Hari ini saya mempersembahkan proyek UKK saya bernama **Kelarin**, sebuah aplikasi manajemen tugas (To-Do List) cerdas berstandar industri dengan backend ganda (Golang & Vercel Serverless), cloud database PostgreSQL di Neon.tech, serta asisten AI berbasis Groq LPU dan Google Gemini."*
+
+#### 2. Tahap Demo CRUD & Proteksi Anti-Tanggal Lampau
+* **Aksi 1 (Tambah Manual)**: Isi formulir: Judul *"Mengerjakan Laporan UKK"*, tentukan tanggal dan jam, prioritas *High*, dan alarm *30m*.
+* **Aksi 2 (Uji Validasi)**: Tunjukkan bahwa kalender browser otomatis menonaktifkan (*disable*) tanggal kemarin. Coba jelaskan bahwa jika dipaksa lewat API sekalipun, backend akan menolak dengan status `400 Bad Request`.
+* **Aksi 3 (Optimistic UI)**: Klik kotak centang tugas. Tunjukkan bahwa checklist langsung tercentang secara instan tanpa ada layar kedip atau loading (*Optimistic UI*).
+* **Aksi 4 (Kalender Interaktif)**: Klik tombol tab **"Kalender & Jadwal"**, tunjukkan penanda titik warna prioritas tugas pada grid kalender bulanan.
+
+#### 3. Tahap Demo Fitur AI (Kelarin AI)
+* **Aksi 1 (Live Status)**: Tunjukkan indikator `● Online` di pojok kanan atas chat AI.
+* **Aksi 2 (Perintah Bahasa Alami)**: Ketik kalimat santai di chat:  
+  *"Besok jam 9 pagi bimbingan tugas akhir dengan mentor, prioritas high, notif 15 menit"*
+* **Aksi 3 (Animasi Mengetik & Kecepatan LPU)**: Perhatikan status di header dan bubble chat yang memunculkan animasi 3 titik memantul (*bouncing dots*) bertuliskan *"Sedang mengetik..."*, lalu dalam waktu **kurang dari 1 detik (< 1s)** hasil ekstraksi tugas langsung muncul!
+* **Aksi 4 (One-Click Insert)**: Klik tombol **"+ Tambah"** pada kartu tugas AI, dan tugas otomatis tersimpan ke database Neon dan muncul di daftar utama.
+* **Aksi 5 (Engine Switcher)**: Tunjukkan tombol badge `⚡ Groq LPU`. Jelaskan bahwa dengan 1 kali klik, pengguna bisa berganti ke engine `✨ Gemini Flash`.
+
+#### 4. Tahap Penjelasan Kode & Arsitektur
+* **Aksi**: Buka VS Code / folder proyek:
+  * Tunjukkan folder `todo-backend`: struct data di `models/todo.go`, logika bisnis di `controllers/todo_controller.go`, dan routing framework Gin di `main.go`.
+  * Tunjukkan folder `api/` untuk serverless cloud Vercel (`_db.js`, `todos/index.js`).
+  * Tunjukkan dashboard database Neon PostgreSQL untuk membuktikan data tersimpan di cloud.
+
+---
+
+### 💬 11 Kunci Jawaban Pertanyaan Penguji / Mentor
 
 ---
 
@@ -377,10 +416,10 @@ Gunakan panduan tanya-jawab ini saat presentasi di depan guru penguji atau mento
 > **Jawaban Anda:**  
 > *"Alurnya melalui 4 tahapan (**NLP Pipeline**):*  
 > 1. *Frontend membaca input bahasa alami pengguna.*  
-> 2. *Frontend menginjeksi konteks waktu sistem waktu nyata (misal: hari ini tanggal 22 November 2026 jam 01:00) ke dalam system prompt instruksi.*  
-> 3. *Request dikirimkan ke model **Google Gemini 3.5 Flash** melalui REST API dengan mode response MIME `application/json`.*  
-> 4. *AI melakukan kalkulasi waktu relatif (misal 'besok jam 9' dihitung menjadi `2026-11-23T09:00`) dan mengembalikan Structured JSON berisi array tugas.*  
-> 5. *Frontend mem-parsing JSON tersebut ke dalam komponen kartu tugas yang siap disimpan ke database hanya dengan 1 kali klik."*
+> 2. *Frontend menginjeksi konteks waktu sistem waktu nyata (hari, tanggal, jam, dan zona waktu saat ini) ke dalam instruksi system prompt sebagai acuan kalkulasi mutlak.*  
+> 3. *Request dikirimkan ke model **Groq LPU** (default, inferensi ultra-cepat < 1 detik) atau **Google Gemini** dengan mode respons terstruktur MIME `application/json`.*  
+> 4. *AI menghitung tanggal relatif ('besok jam 9' dihitung secara matematis menjadi string ISO tanggal besok jam 09:00) dan mengembalikan array Structured JSON.*  
+> 5. *Frontend mem-parsing JSON tersebut ke dalam komponen kartu tugas interaktif yang siap disimpan ke database Neon dengan 1 kali klik."*
 
 ---
 
@@ -414,13 +453,13 @@ Gunakan panduan tanya-jawab ini saat presentasi di depan guru penguji atau mento
 
 ---
 
-### Q10: "Mengapa Anda memutuskan tidak menggunakan AI lokal (Ollama) dan memilih Google Gemini Cloud?"
+### Q10: "Mengapa memilih Groq LPU dan Google Gemini Cloud dibanding AI lokal seperti Ollama?"
 > **Jawaban Anda:**  
-> *"Ollama sangat baik untuk penggunaan offline mandiri di laptop, namun untuk aplikasi web yang di-deploy ke publik (seperti di Vercel), Ollama lokal memiliki kendala arsitektur:*  
-> * Laptop pengembang harus selalu menyala dan terhubung ke internet.*  
-> * Membutuhkan setup tunnel perantara (seperti Cloudflare Tunnel/ngrok) yang URL-nya sering berganti-ganti jika koneksi terputus.*  
-> * Browser memblokir koneksi dari website HTTPS ke HTTP localhost karena aturan keamanan **Mixed Content** dan **Private Network Access (PNA)**.*  
-> *Dengan beralih ke **Google Gemini Cloud AI**, aplikasi menjadi 100% mandiri, bebas maintenance, tidak membebani RAM/GPU laptop, dan dapat diakses secara lancar oleh mentor atau penguji kapan saja dan dari perangkat apa saja termasuk smartphone."*
+> *"Ollama sangat baik untuk pemakaian pribadi offline di laptop, namun untuk aplikasi web yang di-deploy ke publik (seperti di Vercel), Ollama lokal memiliki kendala arsitektur yang fatal:*  
+> 1. *Laptop pengembang harus terus menyala dan memakan resource RAM/GPU yang sangat tinggi.*  
+> 2. *Membutuhkan setup tunnel perantara (seperti Cloudflare Tunnel/ngrok) yang URL-nya acak dan sering berganti atau putus koneksi.*  
+> 3. *Browser modern memblokir koneksi dari website cloud HTTPS ke HTTP localhost laptop karena aturan keamanan browser **Mixed Content** dan **Private Network Access (PNA)**.*  
+> *Dengan beralih ke **Groq Cloud LPU** dan **Google Gemini**, aplikasi menjadi 100% mandiri, bebas biaya (free tier), inferensinya di bawah 1 detik (< 1s), dan Bapak/Ibu penguji bisa membukanya langsung dari smartphone atau laptop masing-masing tanpa bergantung pada laptop saya."*
 
 ---
 
