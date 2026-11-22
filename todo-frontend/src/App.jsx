@@ -7,7 +7,6 @@ import EditModal from './components/EditModal';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import EmptyState from './components/EmptyState';
 import ErrorAlert from './components/ErrorAlert';
-import DesktopWidget from './components/DesktopWidget';
 import CalendarView from './components/CalendarView';
 import AiAssistant from './components/AiAssistant';
 import {
@@ -77,24 +76,6 @@ export default function App() {
   const notifiedKeysRef = useRef(new Set());
   const [activeAlertTodo, setActiveAlertTodo] = useState(null);
 
-  // Desktop Floating Widget States
-  const isUrlWidget = useMemo(() => {
-    return new URLSearchParams(window.location.search).get('mode') === 'widget';
-  }, []);
-  const [isWidgetMode, setIsWidgetMode] = useState(false);
-
-  // Buka widget di jendela melayang desktop independen
-  const handlePopoutWidget = () => {
-    const width = 880;
-    const height = 230;
-    const left = Math.max(0, Math.round((window.screen.width - width) / 2));
-    const top = 10;
-    window.open(
-      `${window.location.origin}${window.location.pathname}?mode=widget`,
-      'KelarinDesktopWidget',
-      `width=${width},height=${height},top=${top},left=${left},status=no,menubar=no,toolbar=no,location=no,resizable=yes`
-    );
-  };
 
   // Helper Toast Feedback
   const showToast = useCallback((message, type = 'success') => {
@@ -387,37 +368,7 @@ export default function App() {
     return groupTodosByPriority(listToGroup);
   }, [activeTodos, filteredTodos, activeFilter, sortBy]);
 
-  useEffect(() => {
-    if (isUrlWidget) {
-      document.body.style.backgroundColor = '#09090b';
-      document.body.style.backgroundImage = 'none';
-      document.body.style.margin = '0';
-      document.body.style.padding = '0';
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.backgroundColor = '';
-      document.body.style.backgroundImage = '';
-    }
-  }, [isUrlWidget]);
 
-  // Jika aplikasi dibuka dalam mode pop-up widget desktop murni (?mode=widget)
-  if (isUrlWidget) {
-    return (
-      <main className="h-screen w-full bg-[#09090b] text-white p-2 sm:p-3 flex flex-col justify-start overflow-hidden">
-        <DesktopWidget
-          todos={todos}
-          onToggleStatus={handleToggleStatus}
-          onAddTodo={handleAddTodo}
-          onRefresh={() => fetchTodosData(false)}
-          isRefreshing={isLoading}
-          onExitWidget={() => {
-            window.location.href = window.location.pathname;
-          }}
-          isStandalone={true}
-        />
-      </main>
-    );
-  }
 
   return (
     <div className="min-h-screen w-full max-w-full bg-slate-100/70 p-2 sm:p-5 lg:p-8 flex flex-col items-center justify-start overflow-x-hidden">
@@ -532,19 +483,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Dynamic Notch Desktop Widget Overlay */}
-      {isWidgetMode && (
-        <DesktopWidget
-          todos={todos}
-          onToggleStatus={handleToggleStatus}
-          onAddTodo={handleAddTodo}
-          onRefresh={() => fetchTodosData(false)}
-          isRefreshing={isLoading}
-          onExitWidget={() => setIsWidgetMode(false)}
-          isStandalone={false}
-        />
-      )}
-
       {/* Main Dual-Pane Container: 2-Side Layout */}
       <div className="w-full max-w-7xl flex-1 flex flex-col min-w-0">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
@@ -558,7 +496,6 @@ export default function App() {
             <Navbar
               isRefreshing={isLoading}
               onRefresh={() => fetchTodosData(false)}
-              onToggleWidgetMode={() => setIsWidgetMode(!isWidgetMode)}
             />
 
             {/* View Switcher: Daftar Tugas vs Kalender & Jadwal */}

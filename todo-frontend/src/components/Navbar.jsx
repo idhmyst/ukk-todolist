@@ -1,10 +1,9 @@
 import React from 'react';
-import { CheckCircle2, RefreshCw, LayoutTemplate } from 'lucide-react';
+import { CheckCircle2, RefreshCw } from 'lucide-react';
 
 export default function Navbar({
   isRefreshing,
   onRefresh,
-  onToggleWidgetMode,
 }) {
   return (
     <header className="mb-6 pb-5 border-b border-slate-100">
@@ -23,17 +22,6 @@ export default function Navbar({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
-          {/* Widget Desktop Button */}
-          <button
-            type="button"
-            onClick={onToggleWidgetMode}
-            title="Buka tampilan Widget Desktop (Notch Island)"
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-zinc-900 bg-zinc-100 hover:bg-zinc-900 hover:text-white rounded-xl border border-zinc-200 transition-all cursor-pointer shadow-xs group"
-          >
-            <LayoutTemplate className="w-4 h-4 text-indigo-600 group-hover:text-indigo-400" />
-            <span className="hidden sm:inline">Widget Desktop</span>
-          </button>
-
           {/* Sync / Refresh Button */}
           <button
             type="button"
