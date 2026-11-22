@@ -108,35 +108,60 @@ Aplikasi ini menggunakan arsitektur **Dual-Engine** yang memisahkan frontend dar
 
 ---
 
-## 🛠️ Teknologi yang Digunakan (Tech Stack)
+## 🛠️ Framework & Teknologi yang Digunakan (Tech Stack)
 
-### Frontend (Client-Side):
-* **Framework**: [React 18](https://react.dev/)
-* **Build Tool**: [Vite 5](https://vitejs.dev/)
-* **Styling**: [Tailwind CSS 3](https://tailwindcss.com/)
-* **Ikon**: [Lucide React](https://lucide.dev/)
-* **HTTP Client**: [Axios](https://axios-http.com/)
+Aplikasi **Kelarin** mengombinasikan framework modern terbaik di ekosistem web untuk menghasilkan aplikasi yang berkinerja tinggi, modular, dan siap digunakan secara publik (*production-ready*).
 
-### Cloud Backend (Production):
-* **Platform**: [Vercel](https://vercel.com/)
-* **Runtime**: Node.js Serverless Functions (`/api/todos`)
-* **Driver Database**: `@neondatabase/serverless` (HTTP connection pooling ultra-cepat, zero-cold start)
+### 1. Frontend (Sisi Klien / Antarmuka)
+* **Framework Utama: [React 18](https://react.dev/)**
+  * **Fungsi**: Membangun Single Page Application (SPA) yang interaktif, reaktif, dan modular berbasis komponen (*component-driven*).
+  * **Alasan Dipilih**: Merupakan library/framework frontend standar industri terpopuler di dunia kerja. React memungkinkan pembaruan antarmuka secara instan menggunakan Virtual DOM, manajemen state lokal yang rapi via React Hooks (`useState`, `useEffect`, `useCallback`), serta mempermudah penerapan konsep *Optimistic UI* saat pengguna mencentang tugas.
+* **Build Tool & Bundler: [Vite 5](https://vitejs.dev/)**
+  * **Fungsi**: Menyediakan server pengembangan lokal (*local dev server*) dan mengompilasi kode React menjadi aset statis (HTML/CSS/JS) saat di-deploy.
+  * **Alasan Dipilih**: Jauh lebih cepat dibanding bundler lama seperti Webpack / Create React App (CRA). Vite memanfaatkan Native ES Modules sehingga proses *Hot Module Replacement* (HMR) terjadi dalam hitungan milidetik tanpa memuat ulang seluruh halaman.
+* **CSS Framework: [Tailwind CSS 3](https://tailwindcss.com/)**
+  * **Fungsi**: Mendesain antarmuka aplikasi secara responsif (mendukung layar smartphone, tablet, hingga desktop) dengan sistem kelas utility.
+  * **Alasan Dipilih**: Menghemat waktu penulisan kode CSS, tidak membutuhkan file CSS terpisah yang menumpuk, serta menghasilkan desain modern (*clean, minimalis, dan elegan*) sesuai tren aplikasi produktivitas masa kini.
+* **Komponen Ikon: [Lucide React](https://lucide.dev/)**
+  * **Fungsi & Alasan**: Kumpulan ikon SVG ringan yang konsisten untuk elemen tombol, filter status, checklist, kalender, lonceng notifikasi, dan maskot AI.
+* **HTTP Client: [Axios](https://axios-http.com/)**
+  * **Fungsi & Alasan**: Menangani komunikasi data asinkron (*asynchronous HTTP requests*) antara browser dengan REST API backend, dilengkapi penanganan error dan parsing data JSON secara otomatis.
 
-### Local Backend (Development):
-* **Bahasa**: [Golang](https://go.dev/) (Go 1.25+)
-* **Web Framework**: [Gin Gonic](https://gin-gonic.com/)
-* **ORM**: [GORM](https://gorm.io/)
-* **Driver Database**: `gorm.io/driver/postgres`
-* **Middleware**: `gin-contrib/cors`
+---
 
-### Database & Cloud Storage:
-* **Database Engine**: PostgreSQL 16
-* **Cloud Provider**: [Neon.tech](https://neon.tech) (Serverless Lakebase Postgres)
-* **Koneksi**: Pooled connection string dengan SSL Mode Require
+### 2. Backend (Sisi Server & Pengolahan Data)
+Aplikasi ini dirancang dengan **Dual-Engine Architecture** (dua backend yang saling melengkapi):
 
-### Artificial Intelligence:
-* **Provider**: Google AI Studio (Google DeepMind)
-* **Model**: `gemini-3.5-flash` / `gemini-3.5-flash-lite`
+* **Engine 1 (Local Development & Ujian Keahlian UKK): [Golang (Go)](https://go.dev/)**
+  * **Web Framework: [Gin Gonic](https://gin-gonic.com/) (`github.com/gin-gonic/gin`)**
+    * **Fungsi**: Menangani routing endpoint REST API (`/api/todos`), parsing payload JSON, middleware CORS, serta validasi request.
+    * **Alasan Dipilih**: Gin merupakan salah satu web framework tercepat di dunia pemrograman Go. Menggunakan algoritma *Radix Tree Router*, Gin memiliki konsumsi memori yang sangat minim (*zero memory allocation*) dan performa *throughput* puluhan ribu request per detik.
+  * **ORM (Object Relational Mapping): [GORM](https://gorm.io/)**
+    * **Fungsi**: Menjembatani kode Go dengan tabel database PostgreSQL.
+    * **Alasan Dipilih**: Mengeliminasi risiko kerentanan keamanan SQL Injection melalui fitur *parameterized queries* bawaan, serta menyediakan fitur *Auto-Migrate* yang otomatis membuat atau menyesuaikan skema tabel `todos` saat server Go dijalankan.
+  * **CORS Middleware: `gin-contrib/cors`**
+    * **Fungsi**: Mengamankan akses lintas origin antara frontend Vite (`localhost:5173`) dan backend Go (`localhost:8080`).
+
+* **Engine 2 (Cloud Production Deployment): [Vercel Serverless Functions](https://vercel.com/)**
+  * **Runtime**: Node.js Serverless Edge
+  * **Fungsi**: Melayani endpoint REST API `/api/todos` di lingkungan cloud publik secara otomatis tanpa perlu menyewa atau menyalakan server VPS terus-menerus.
+  * **Driver Database: `@neondatabase/serverless`**
+    * **Alasan Dipilih**: Driver resmi Neon untuk lingkungan serverless yang menggunakan protokol HTTP/WebSocket dengan *connection pooling* terintegrasi. Hal ini mengatasi masalah klasik serverless seperti kehabisan kuota koneksi (*connection exhaustion*) dan jeda *cold start*.
+
+---
+
+### 3. Database & Artificial Intelligence
+* **Database: PostgreSQL 16 di [Neon.tech](https://neon.tech)**
+  * **Fungsi**: Menyimpan data seluruh tugas, status penyelesaian, prioritas, tenggat waktu, dan alarm pengingat secara persisten.
+  * **Alasan Dipilih**: Relational Database Management System (RDBMS) dengan standar integritas ACID tertinggi, mendukung tipe data waktu yang akurat dengan zona waktu (*timezone-aware*), serta fitur autoscaling dan automated backup dari Neon Cloud.
+* **AI Engine: [Google Gemini Cloud](https://ai.google.dev/) (`gemini-3.5-flash`)**
+  * **Fungsi**: Memproses bahasa alami manusia (*Natural Language Processing / NLP*) dari kolom chat, menghitung waktu relatif secara matematis, dan mengubahnya menjadi format tugas terstruktur (*Structured JSON*).
+  * **Alasan Dipilih**: Model LLM frontier generasi terbaru dari Google DeepMind yang memiliki kecepatan inferensi ultra-cepat (< 1 detik), akurasi pemahaman Bahasa Indonesia yang tinggi, serta kuota gratis (*free tier*) yang andal tanpa membebani komputasi laptop.
+
+---
+
+### 💡 Rangkuman Cara Menjelaskan Framework ke Mentor / Guru Penguji:
+> *"Aplikasi Kelarin dibangun menggunakan pemisahan client-server. Di sisi frontend, kami menggunakan **React 18** dengan build-tool **Vite** dan styling **Tailwind CSS**. Di sisi backend lokal, kami menggunakan **Golang** dengan framework **Gin Gonic** dan ORM **GORM** untuk membuktikan penguasaan backend berkinerja tinggi. Untuk live demo di cloud, kami menggunakan arsitektur **Serverless di Vercel** yang terhubung langsung ke cloud database **Neon PostgreSQL** dan model AI **Google Gemini Flash**."*
 
 ---
 
@@ -312,28 +337,37 @@ Gunakan panduan tanya-jawab ini saat presentasi di depan guru penguji atau mento
 
 ---
 
-### Q1: "Mengapa aplikasi ini memisahkan Frontend dan Backend (Decoupled Client-Server)?"
+### Q1: "Aplikasi ini menggunakan framework apa saja dan mengapa memilih framework tersebut?"
+> **Jawaban Anda:**  
+> *"Proyek ini memadukan framework modern terbaik di frontend maupun backend:*  
+> 1. *Di sisi **Frontend**, kami menggunakan framework **React 18** didukung build tool **Vite 5** dan styling **Tailwind CSS 3**. React dipilih karena merupakan standar industri untuk Single Page Application (SPA) yang modular dan reaktif, sementara Tailwind mempercepat pembuatan antarmuka modern yang bersih dan responsif di mobile maupun desktop.*  
+> 2. *Di sisi **Backend Lokal**, kami menggunakan **Golang** dengan web framework **Gin Gonic** dan ORM **GORM**. Gin dipilih karena kecepatan routing-nya yang sangat tinggi (berbasis Radix Tree) dengan konsumsi RAM yang sangat hemat, serta GORM yang melindungi database dari SQL Injection secara otomatis.*  
+> 3. *Di sisi **Cloud Production**, kami menerapkan arsitektur **Vercel Serverless Functions** (Node.js runtime) yang terhubung ke cloud database **PostgreSQL di Neon.tech** menggunakan connection pooling HTTP, sehingga aplikasi live 24/7 tanpa perlu server VPS berbayar."*
+
+---
+
+### Q2: "Mengapa aplikasi ini memisahkan Frontend dan Backend (Decoupled Client-Server)?"
 > **Jawaban Anda:**  
 > *"Pemisahan ini mengikuti standar industri modern (**Separation of Concerns**). Frontend hanya bertugas menangani tampilan antarmuka (UI/UX) dan pengalaman pengguna yang reaktif menggunakan React, sedangkan Backend bertugas mengamankan logika bisnis, validasi data, dan interaksi database.*  
 > *Keuntungannya: aplikasi menjadi sangat modular. Di masa depan, jika kita ingin membuat aplikasi mobile Android/iOS, kita tidak perlu membuat ulang backend—cukup mengonsumsi REST API yang sama yang sudah ada."*
 
 ---
 
-### Q2: "Mengapa memilih PostgreSQL di Neon Cloud daripada MySQL lokal (Laragon/XAMPP)?"
+### Q3: "Mengapa memilih PostgreSQL di Neon Cloud daripada MySQL lokal (Laragon/XAMPP)?"
 > **Jawaban Anda:**  
 > *"Pertama, **PostgreSQL** memiliki integritas data yang sangat ketat, tipe data yang kaya (seperti JSONB dan timezone-aware timestamps), serta performa query yang superior.*  
 > *Kedua, **Neon Cloud** merupakan arsitektur Lakebase Postgres Serverless yang memisahkan storage dari compute. Neon memiliki fitur **Connection Pooling** terintegrasi, autoscaling, dan backup otomatis. Dengan menggunakan Neon, aplikasi dapat diakses secara online dari perangkat mana pun di dunia tanpa bergantung pada laptop pengembang yang harus menyala terus."*
 
 ---
 
-### Q3: "Bagaimana cara kerja backend di cloud jika tidak menyewa server VPS atau Render?"
+### Q4: "Bagaimana cara kerja backend di cloud jika tidak menyewa server VPS atau Render?"
 > **Jawaban Anda:**  
 > *"Aplikasi ini menerapkan arsitektur **Vercel Serverless Functions**. Setiap endpoint di folder `/api/todos` adalah fungsi JavaScript mandiri yang dieksekusi di lingkungan AWS edge milik Vercel hanya ketika ada permintaan request HTTP yang masuk.*  
 > *Fungsi ini terhubung ke Neon PostgreSQL menggunakan driver resmi `@neondatabase/serverless` yang berbasis HTTP pooled transport. Pendekatan ini membuat aplikasi berbiaya Rp 0, hemat resource, bebas cold-start, dan tidak memerlukan server VPS yang harus disewa atau dikelola manual."*
 
 ---
 
-### Q4: "Bagaimana alur kerja fitur AI Assistant (Kelarin AI) dalam mengubah teks chat menjadi tugas di database?"
+### Q5: "Bagaimana alur kerja fitur AI Assistant (Kelarin AI) dalam mengubah teks chat menjadi tugas di database?"
 > **Jawaban Anda:**  
 > *"Alurnya melalui 4 tahapan (**NLP Pipeline**):*  
 > 1. *Frontend membaca input bahasa alami pengguna.*  
@@ -344,7 +378,7 @@ Gunakan panduan tanya-jawab ini saat presentasi di depan guru penguji atau mento
 
 ---
 
-### Q5: "Bagaimana Anda menjamin keamanan aplikasi dari serangan SQL Injection dan CORS?"
+### Q6: "Bagaimana Anda menjamin keamanan aplikasi dari serangan SQL Injection dan CORS?"
 > **Jawaban Anda:**  
 > 1. *Untuk **SQL Injection**: Di backend Golang, kami menggunakan **GORM ORM** yang menerapkan parameterized queries secara otomatis. Di backend Serverless Vercel, kami menggunakan tagged-template queries dari `@neondatabase/serverless` sehingga input pengguna tidak pernah digabungkan secara mentah (raw concatenation) ke string SQL.*  
 > 2. *Untuk **CORS (Cross-Origin Resource Sharing)**: Di backend Go kami mengunci domain yang diizinkan hanya pada origin terpercaya (`https://kelarin-eight.vercel.app` dan `localhost`). Di Vercel, API dan Frontend berada di satu domain yang sama (`same-origin`), sehingga secara alami kebal terhadap serangan CORS antar-domain.*  
@@ -352,7 +386,7 @@ Gunakan panduan tanya-jawab ini saat presentasi di depan guru penguji atau mento
 
 ---
 
-### Q6: "Bagaimana sistem memastikan pengguna tidak memasukkan tanggal deadline yang sudah lewat (hari kemarin)?"
+### Q7: "Bagaimana sistem memastikan pengguna tidak memasukkan tanggal deadline yang sudah lewat (hari kemarin)?"
 > **Jawaban Anda:**  
 > *"Kami menerapkan sistem **Defense-in-Depth (Proteksi Berlapis)**:*  
 > * Di sisi **Frontend (UI)**: Input HTML datetime-local dibatasi atribut `min` yang diisi waktu sistem saat ini, sehingga pemilih kalender otomatis mengunci dan menonaktifkan tanggal-tanggal lampau.*  
@@ -360,21 +394,21 @@ Gunakan panduan tanya-jawab ini saat presentasi di depan guru penguji atau mento
 
 ---
 
-### Q7: "Apa itu Optimistic UI dan apakah aplikasi ini menerapkannya?"
+### Q8: "Apa itu Optimistic UI dan apakah aplikasi ini menerapkannya?"
 > **Jawaban Anda:**  
 > *"Ya, aplikasi ini menerapkan konsep **Optimistic UI Update** saat pengguna mengubah status checklist tugas (selesai/belum selesai).*  
 > *Ketika kotak checklist dicentang, antarmuka React langsung memperbarui state visual tugas menjadi selesai tanpa menunggu jawaban jaringan server terlebih dahulu. Di balik layar, request asynchronous `PUT /api/todos/:id` dikirimkan ke database. Jika request berhasil, state tetap terjaga; jika terjadi kegagalan jaringan, state otomatis dikembalikan ke kondisi semula (**rollback**) dan pesan error ditampilkan. Ini menghasilkan pengalaman pengguna yang instan tanpa jeda."*
 
 ---
 
-### Q8: "Di backend Golang, apa keunggulan menggunakan Gin Gonic dibanding library bawaan net/http?"
+### Q9: "Di backend Golang, apa keunggulan menggunakan Gin Gonic dibanding library bawaan net/http?"
 > **Jawaban Anda:**  
 > *"Gin Gonic menggunakan custom tree-based routing (**Radix Tree Router**) yang merupakan salah satu router tercepat di ekosistem Go dengan konsumsi memori yang sangat kecil (zero-allocation).*  
 > *Selain performa tinggi, Gin menyediakan fitur bawaan yang sangat mempermudah pengembangan seperti JSON binding/validation otomatis (`binding:"required"`), manajemen grup routing (`r.Group("/api")`), middleware crash recovery, dan penanganan format response JSON yang sangat bersih."*
 
 ---
 
-### Q9: "Mengapa Anda memutuskan tidak menggunakan AI lokal (Ollama) dan memilih Google Gemini Cloud?"
+### Q10: "Mengapa Anda memutuskan tidak menggunakan AI lokal (Ollama) dan memilih Google Gemini Cloud?"
 > **Jawaban Anda:**  
 > *"Ollama sangat baik untuk penggunaan offline mandiri di laptop, namun untuk aplikasi web yang di-deploy ke publik (seperti di Vercel), Ollama lokal memiliki kendala arsitektur:*  
 > * Laptop pengembang harus selalu menyala dan terhubung ke internet.*  
@@ -384,7 +418,7 @@ Gunakan panduan tanya-jawab ini saat presentasi di depan guru penguji atau mento
 
 ---
 
-### Q10: "Jika mentor meminta Anda menambah fitur baru, seberapa mudah arsitektur ini dikembangkan?"
+### Q11: "Jika mentor meminta Anda menambah fitur baru, seberapa mudah arsitektur ini dikembangkan?"
 > **Jawaban Anda:**  
 > *"Sangat mudah dan terukur (**Extensible**). Karena arsitekturnya modular:*  
 > * Jika ingin menambah kolom baru (misal kategori tugas atau tagging), kita cukup menambahkan field di struct `models/todo.go` (backend Go otomatis melakukan auto-migrate tabel) dan menambahkan field di DTO payload Vercel.*  
