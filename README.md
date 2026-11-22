@@ -1,6 +1,6 @@
-# 🚀 Kelarin — Smart To-Do List Application with AI Assistant & Serverless Cloud
+# 🚀 Kelarin — Smart To-Do List Application with Dual AI Assistant & Serverless Cloud
 
-Aplikasi manajemen tugas (**To-Do List**) cerdas, modern, dan berstandar industri dengan arsitektur *Decoupled Fullstack*, asisten cerdas berbasis **Google Gemini AI**, dan backend ganda (**Vercel Serverless Functions** untuk cloud production & **Golang Gin Framework** untuk local development). 
+Aplikasi manajemen tugas (**To-Do List**) cerdas, modern, dan berstandar industri dengan arsitektur *Decoupled Fullstack*, asisten cerdas ganda berbasis **Groq LPU (Ultra-Cepat) & Google Gemini Cloud AI**, serta backend ganda (**Vercel Serverless Functions** untuk cloud production & **Golang Gin Framework** untuk local development). 
 
 Dibangun khusus untuk memenuhi standar penilaian **Uji Kompetensi Keahlian (UKK) Program Keahlian Pengembangan Perangkat Lunak dan GIM (PPLG) SMK**.
 
@@ -8,7 +8,9 @@ Dibangun khusus untuk memenuhi standar penilaian **Uji Kompetensi Keahlian (UKK)
 * 💻 **Frontend Local (Vite)**: `http://localhost:5173`
 * ⚙️ **Backend Local (Golang Gin)**: `http://localhost:8080`
 * 🗄️ **Cloud Database (Neon PostgreSQL)**: `ep-mute-lab-bdw7rg1o-pooler.c-8.us-east-2.aws.neon.tech`
-* 🧠 **AI Engine**: Google Gemini Cloud (`gemini-3.5-flash`)
+* 🧠 **AI Engines**: 
+  * ⚡ **Groq Cloud LPU** (`openai/gpt-oss-120b`, `qwen/qwen3.8-27b`) — Inferensi ultra-cepat < 1 detik.
+  * ✨ **Google Gemini Cloud** (`gemini-3.5-flash`, `gemini-3.5-flash-lite`) — DeepMind multimodal LLM.
 
 ---
 
@@ -150,18 +152,22 @@ Aplikasi ini dirancang dengan **Dual-Engine Architecture** (dua backend yang sal
 
 ---
 
-### 3. Database & Artificial Intelligence
+### 3. Database & Artificial Intelligence (Dual AI Engine)
 * **Database: PostgreSQL 16 di [Neon.tech](https://neon.tech)**
   * **Fungsi**: Menyimpan data seluruh tugas, status penyelesaian, prioritas, tenggat waktu, dan alarm pengingat secara persisten.
   * **Alasan Dipilih**: Relational Database Management System (RDBMS) dengan standar integritas ACID tertinggi, mendukung tipe data waktu yang akurat dengan zona waktu (*timezone-aware*), serta fitur autoscaling dan automated backup dari Neon Cloud.
-* **AI Engine: [Google Gemini Cloud](https://ai.google.dev/) (`gemini-3.5-flash`)**
-  * **Fungsi**: Memproses bahasa alami manusia (*Natural Language Processing / NLP*) dari kolom chat, menghitung waktu relatif secara matematis, dan mengubahnya menjadi format tugas terstruktur (*Structured JSON*).
-  * **Alasan Dipilih**: Model LLM frontier generasi terbaru dari Google DeepMind yang memiliki kecepatan inferensi ultra-cepat (< 1 detik), akurasi pemahaman Bahasa Indonesia yang tinggi, serta kuota gratis (*free tier*) yang andal tanpa membebani komputasi laptop.
+* **AI Engine 1 (Primary / Default): [Groq Cloud LPU](https://groq.com/)**
+  * **Model**: `openai/gpt-oss-120b` & `qwen/qwen3.8-27b`
+  * **Fungsi**: Memproses bahasa alami manusia (*Natural Language Processing / NLP*) dari kolom chat, menghitung waktu relatif secara presisi, dan menghasilkan *Structured JSON*.
+  * **Alasan Dipilih**: Menggunakan chip LPU (*Language Processing Unit*) rancangan Groq yang menghasilkan kecepatan inferensi paling kencang di dunia (< 1 detik per respons) dengan kompatibilitas format JSON murni.
+* **AI Engine 2 (Secondary / Fallback): [Google Gemini Cloud](https://ai.google.dev/)**
+  * **Model**: `gemini-3.5-flash` / `gemini-3.5-flash-lite`
+  * **Fungsi & Alasan**: Model LLM frontier generasi terbaru dari Google DeepMind dengan akurasi pemahaman konteks bahasa Indonesia tingkat tinggi, bertindak sebagai *auto-fallback* jika salah satu provider mengalami *rate-limit*.
 
 ---
 
-### 💡 Rangkuman Cara Menjelaskan Framework ke Mentor / Guru Penguji:
-> *"Aplikasi Kelarin dibangun menggunakan pemisahan client-server. Di sisi frontend, kami menggunakan **React 18** dengan build-tool **Vite** dan styling **Tailwind CSS**. Di sisi backend lokal, kami menggunakan **Golang** dengan framework **Gin Gonic** dan ORM **GORM** untuk membuktikan penguasaan backend berkinerja tinggi. Untuk live demo di cloud, kami menggunakan arsitektur **Serverless di Vercel** yang terhubung langsung ke cloud database **Neon PostgreSQL** dan model AI **Google Gemini Flash**."*
+### 💡 Rangkuman Cara Menjelaskan Framework & AI ke Mentor / Guru Penguji:
+> *"Aplikasi Kelarin dibangun menggunakan pemisahan client-server. Di sisi frontend, kami menggunakan **React 18** dengan build-tool **Vite** dan styling **Tailwind CSS**. Di sisi backend lokal, kami menggunakan **Golang** dengan framework **Gin Gonic** dan ORM **GORM** untuk membuktikan penguasaan backend berkinerja tinggi. Untuk live demo di cloud, kami menggunakan arsitektur **Serverless di Vercel** yang terhubung langsung ke cloud database **Neon PostgreSQL**. Sedangkan untuk asisten cerdasnya, kami mengintegrasikan **Dual-Engine AI (Groq LPU & Google Gemini Cloud)** yang mampu menghasilkan kalkulasi jadwal otomatis dalam waktu kurang dari 1 detik."*
 
 ---
 
@@ -307,12 +313,12 @@ npm run dev
 
 ---
 
-## 🧠 Cara Kerja Kelarin AI (Google Gemini NLP)
+## 🧠 Cara Kerja Kelarin AI (Groq LPU & Google Gemini NLP)
 
 1. **Input Pengguna**: Pengguna mengetik kalimat bebas di kolom chat, misalnya:  
    *"Tolong ingatkan besok jam 14:00 ada bimbingan UKK dengan mentor, prioritas high, notif 15 menit."*
 2. **Injeksi Konteks Waktu Sistem**: Di [`aiService.js`](file:///d:/TELKOM/ukk-todolist/todo-frontend/src/services/aiService.js), aplikasi menginjeksi waktu lokal saat ini (Hari, Tanggal, Jam, dan Zona Waktu) ke dalam prompt sistem sebagai acuan mutlak kalkulasi.
-3. **Structured Prompting**: Gemini diinstruksikan untuk menghasilkan output dalam format JSON murni:
+3. **Structured Prompting**: Engine **Groq LPU** (atau **Google Gemini**) diinstruksikan untuk menghasilkan output dalam format JSON murni:
    ```json
    {
      "reply": "Siap! Jadwal bimbingan UKK untuk besok jam 14:00 sudah saya siapkan.",
