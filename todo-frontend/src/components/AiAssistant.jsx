@@ -209,15 +209,31 @@ export default function AiAssistant({
                 )}
               </button>
             </div>
-            <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
-              <span
-                className={`w-1.5 h-1.5 rounded-full inline-block ${
-                  isGroq ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'
-                }`}
-              />
-              <span>
-                {isGroq ? 'Online • Groq LPU Cloud (< 1s)' : 'Online • Google Gemini Cloud'}
-              </span>
+            <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5 min-h-[16px]">
+              {isLoading ? (
+                <span className="flex items-center gap-1.5 text-amber-300">
+                  <span className="flex items-center gap-0.5">
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce"
+                      style={{ animationDuration: '700ms', animationDelay: '0ms' }}
+                    />
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce"
+                      style={{ animationDuration: '700ms', animationDelay: '180ms' }}
+                    />
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce"
+                      style={{ animationDuration: '700ms', animationDelay: '360ms' }}
+                    />
+                  </span>
+                  <span className="font-medium text-[10.5px]">Sedang mengetik...</span>
+                </span>
+              ) : (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                  <span className="text-emerald-400/90 font-medium">Online</span>
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -410,19 +426,36 @@ export default function AiAssistant({
           );
         })}
 
-        {/* Loading Indicator */}
+        {/* Typing Animation in Chat Bubble */}
         {isLoading && (
-          <div className="flex items-start gap-2.5">
+          <div className="flex items-start gap-2.5 animate-in fade-in duration-200">
             <div
-              className={`w-7 h-7 rounded-xl text-white flex items-center justify-center flex-shrink-0 shadow-2xs animate-pulse ${
-                isGroq ? 'bg-amber-500' : 'bg-indigo-600'
+              className={`w-7 h-7 rounded-xl text-white flex items-center justify-center flex-shrink-0 shadow-2xs ${
+                isGroq
+                  ? 'bg-gradient-to-tr from-amber-500 to-orange-500'
+                  : 'bg-gradient-to-tr from-indigo-500 to-violet-500'
               }`}
             >
               {isGroq ? <Zap className="w-3.5 h-3.5 fill-white" /> : <Bot className="w-4 h-4" />}
             </div>
-            <div className="bg-white border border-slate-200/80 rounded-2xl rounded-tl-xs p-3 text-xs text-slate-600 flex items-center gap-2 shadow-2xs">
-              <Loader2 className={`w-3.5 h-3.5 animate-spin ${isGroq ? 'text-amber-600' : 'text-indigo-600'}`} />
-              <span>Memproses dengan {isGroq ? 'Groq LPU (Ultra-Cepat)...' : 'Gemini AI...'}</span>
+            <div className="bg-white border border-slate-200/80 rounded-2xl rounded-tl-xs px-4 py-3 shadow-2xs flex items-center gap-2.5">
+              <div className="flex items-center gap-1.5 py-0.5">
+                <span
+                  className={`w-2 h-2 rounded-full animate-bounce ${isGroq ? 'bg-amber-500' : 'bg-indigo-600'}`}
+                  style={{ animationDuration: '700ms', animationDelay: '0ms' }}
+                />
+                <span
+                  className={`w-2 h-2 rounded-full animate-bounce ${isGroq ? 'bg-amber-500' : 'bg-indigo-600'}`}
+                  style={{ animationDuration: '700ms', animationDelay: '180ms' }}
+                />
+                <span
+                  className={`w-2 h-2 rounded-full animate-bounce ${isGroq ? 'bg-amber-500' : 'bg-indigo-600'}`}
+                  style={{ animationDuration: '700ms', animationDelay: '360ms' }}
+                />
+              </div>
+              <span className="text-[11px] text-slate-400 font-medium">
+                Sedang mengetik...
+              </span>
             </div>
           </div>
         )}
