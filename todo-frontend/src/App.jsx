@@ -260,10 +260,24 @@ export default function App() {
   }, []);
 
   // Handler: Tambah Todo (POST /api/todos)
-  const handleAddTodo = async (title, priority, dueDate, reminder = '30m') => {
+  const handleAddTodo = async (titleOrObj, priority = 'medium', dueDate = '', reminder = '30m') => {
     setIsSubmitting(true);
     try {
-      const newTodo = await createTodo(title, priority, dueDate, reminder);
+      let title = '';
+      let p = priority;
+      let d = dueDate;
+      let r = reminder;
+
+      if (titleOrObj && typeof titleOrObj === 'object') {
+        title = titleOrObj.title || '';
+        p = titleOrObj.priority || 'medium';
+        d = titleOrObj.due_date || titleOrObj.dueDate || '';
+        r = titleOrObj.reminder || '30m';
+      } else {
+        title = titleOrObj || '';
+      }
+
+      const newTodo = await createTodo(title, p, d, r);
       setTodos((prev) => [newTodo, ...prev]);
       showToast('Tugas baru berhasil ditambahkan!', 'success');
       setIsBackendOnline(true);

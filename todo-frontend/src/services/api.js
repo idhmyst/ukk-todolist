@@ -173,16 +173,31 @@ export const getTodos = async () => {
 /**
  * Membuat to-do baru
  * POST /todos
- * Payload: { "title": string, "priority": string, "due_date": string, "reminder": string }
+ * Menerima baik parameter terpisah (title, priority, dueDate, reminder)
+ * maupun satu objek { title, priority, due_date, reminder }
  */
-export const createTodo = async (title, priority = 'medium', dueDate = '', reminder = '30m') => {
+export const createTodo = async (titleOrObj, priority = 'medium', dueDate = '', reminder = '30m') => {
+  let title = '';
+  let finalPriority = priority;
+  let finalDueDate = dueDate;
+  let finalReminder = reminder;
+
+  if (titleOrObj && typeof titleOrObj === 'object') {
+    title = titleOrObj.title || '';
+    finalPriority = titleOrObj.priority || priority || 'medium';
+    finalDueDate = titleOrObj.due_date || titleOrObj.dueDate || dueDate || '';
+    finalReminder = titleOrObj.reminder || reminder || '30m';
+  } else {
+    title = titleOrObj || '';
+  }
+
   const result = await requestWithFailover('/todos', {
     method: 'POST',
     body: {
-      title: (title || '').trim(),
-      priority: priority || 'medium',
-      due_date: dueDate || '',
-      reminder: reminder || '30m',
+      title: String(title || '').trim(),
+      priority: String(finalPriority || 'medium').trim(),
+      due_date: String(finalDueDate || '').trim(),
+      reminder: String(finalReminder || '30m').trim(),
     },
   });
   return result?.data;
