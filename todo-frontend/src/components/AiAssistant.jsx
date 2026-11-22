@@ -61,7 +61,7 @@ export default function AiAssistant({
     {
       id: 'welcome',
       role: 'model',
-      text: 'Halo! Saya Kelarin AI (didukung Groq LPU & Gemini). Mau catat atau cek tugas apa hari ini?',
+      text: 'Halo! Saya Kelarin AI. Mau catat atau cek tugas apa hari ini?',
       todos: [],
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
     },
