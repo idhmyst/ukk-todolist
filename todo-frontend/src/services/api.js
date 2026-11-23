@@ -7,7 +7,7 @@
  *
  * Dengan arsitektur failover ini, aplikasi otomatis berjalan lancar dimanapun
  * tanpa mengharuskan pengguna menyalakan backend secara manual.
- */
+ */ 
 
 const CLOUD_API_URL = 'https://kelarin-eight.vercel.app/api';
 

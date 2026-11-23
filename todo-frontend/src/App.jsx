@@ -44,7 +44,7 @@ import {
   Clock,
   ListTodo,
   Calendar as CalendarIcon,
-  PieChart,
+  BarChart3,
   Sparkles,
 } from 'lucide-react';
 
@@ -598,11 +598,8 @@ export default function App() {
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <PieChart className="w-4 h-4 text-indigo-600" />
-                  <span>Analisis & Prioritas</span>
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 text-rose-700 font-bold">
-                    Chart
-                  </span>
+                  <BarChart3 className="w-4 h-4" />
+                  <span>Grafik Prioritas</span>
                 </button>
               </div>
 
@@ -629,7 +626,6 @@ export default function App() {
               <AnalyticsView
                 todos={todos}
                 onSelectPriorityFilter={handleSelectPriorityFilter}
-                onConsultAi={handleConsultAiFromAnalytics}
               />
             ) : (
               <>
