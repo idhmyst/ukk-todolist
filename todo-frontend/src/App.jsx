@@ -8,6 +8,7 @@ import LoadingSkeleton from './components/LoadingSkeleton';
 import EmptyState from './components/EmptyState';
 import ErrorAlert from './components/ErrorAlert';
 import CalendarView from './components/CalendarView';
+import AnalyticsView from './components/AnalyticsView';
 import AiAssistant from './components/AiAssistant';
 import {
   getTodos,
@@ -43,6 +44,7 @@ import {
   Clock,
   ListTodo,
   Calendar as CalendarIcon,
+  PieChart,
   Sparkles,
 } from 'lucide-react';
 
@@ -94,6 +96,33 @@ export default function App() {
     },
     [showToast]
   );
+
+  // Navigasi dari Chart Analitik: Filter cepat berdasarkan prioritas (High, Medium, Low)
+  const handleSelectPriorityFilter = useCallback(
+    (priorityLevel) => {
+      setViewMode('tasks');
+      setSearchQuery(priorityLevel);
+      setActiveFilter('all');
+      showToast(
+        `Menampilkan daftar tugas berprioritas "${priorityLevel.toUpperCase()}" 🎯`,
+        'success'
+      );
+    },
+    [showToast]
+  );
+
+  // Konsultasi AI dari Analitik
+  const handleConsultAiFromAnalytics = useCallback(() => {
+    setIsAiMinimized(false);
+    setShowAiMobile(true);
+    showToast('Kelarin AI siap membantu merencanakan prioritas tugasmu! 💡', 'success');
+    setTimeout(() => {
+      const el = document.getElementById('kelarin-ai-container');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 200);
+  }, [showToast]);
 
   // Tes bunyikan nada dering melodi & minta izin notifikasi browser
   const handleTestRingtone = async () => {
@@ -523,9 +552,9 @@ export default function App() {
               onRefresh={() => fetchTodosData(false)}
             />
 
-            {/* View Switcher: Daftar Tugas vs Kalender & Jadwal */}
+            {/* View Switcher: Daftar Tugas vs Kalender & Jadwal vs Analitik */}
             <div className="flex items-center justify-between flex-wrap gap-2 mb-6 p-1.5 bg-slate-100 rounded-2xl">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <button
                   type="button"
                   onClick={() => setViewMode('tasks')}
@@ -559,6 +588,22 @@ export default function App() {
                     </span>
                   )}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setViewMode('analytics')}
+                  className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                    viewMode === 'analytics'
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <PieChart className="w-4 h-4 text-indigo-600" />
+                  <span>Analisis & Prioritas</span>
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 text-rose-700 font-bold">
+                    Chart
+                  </span>
+                </button>
               </div>
 
               {/* Status info */}
@@ -569,7 +614,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Konten Berdasarkan Tab View: 'calendar' vs 'tasks' */}
+            {/* Konten Berdasarkan Tab View: 'calendar' vs 'analytics' vs 'tasks' */}
             {viewMode === 'calendar' ? (
               <CalendarView
                 todos={todos}
@@ -579,6 +624,12 @@ export default function App() {
                 onToggleStatus={handleToggleStatus}
                 onEditTodo={(t) => setEditingTodo(t)}
                 onDeleteTodo={handleDeleteTodo}
+              />
+            ) : viewMode === 'analytics' ? (
+              <AnalyticsView
+                todos={todos}
+                onSelectPriorityFilter={handleSelectPriorityFilter}
+                onConsultAi={handleConsultAiFromAnalytics}
               />
             ) : (
               <>
