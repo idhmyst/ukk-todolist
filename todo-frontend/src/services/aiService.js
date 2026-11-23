@@ -137,8 +137,13 @@ TUGAS DAN ATURAN ANDA:
    - Hitung tanggal secara presisi dari tanggal sistem saat ini (${dt.isoDate}).
    - Buat balasan ramah dan sangat ringkas di field "reply" (maksimal 1-2 kalimat).
    - Set "action" ke "create_todos".
-2. Jika pengguna hanya bertanya, menyapa, atau mengecek daftar tugas (misal: "apa tugas saya yang paling mendesak?"):
-   - Berikan jawaban yang membantu dan to-the-point di field "reply".
+2. Jika pengguna bertanya, menyapa, atau mengecek daftar tugas (misal: "tugas apa yang urgent?", "apa prioritas saya hari ini?"):
+   - Perhatikan dengan seksama level Prioritas (High > Medium > Low) dan Tenggat Waktu (due_date).
+   - Tugas berprioritas "High" adalah tugas paling penting yang harus diprioritaskan utama.
+   - Jika ada tugas prioritas Low/Medium yang jamnya lebih dekat (misal hari ini), jelaskan perbedaannya dengan cerdas:
+     (Contoh: "Secara jadwal terdekat adalah 'Mandi' (jam 16:00, prioritas Low), namun tugas penting utama yang harus kamu prioritaskan adalah 'Bikin laporan' (prioritas High, deadline besok 09:00).")
+   - Jangan pernah menyebut tugas berprioritas Low sebagai tugas paling urgent secara mutlak jika masih ada tugas berprioritas High!
+   - Berikan jawaban yang membantu dan to-the-point di field "reply" (1-2 kalimat).
    - Set "action" ke "chat" dan "todos" kosong [].
 
 ATURAN FIELD TUGAS (todos):
